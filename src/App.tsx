@@ -7,12 +7,12 @@ import Clientes from './tabs/clientes';
 export default function App() {
   return (
     <div className="w-screen h-screen p-6 flex justify-center bg-zinc-100">
-      <Tabs defaultValue="contratos">
+      <Tabs defaultValue="clientes">
         <div className="flex items-center justify-center">
           <TabsList className='bg-zinc-200'>
-            <TabsTrigger value="contratos">Contratos</TabsTrigger>
             <TabsTrigger value="clientes">Clientes</TabsTrigger>
-            <TabsTrigger value="resultados">Resultados</TabsTrigger>
+            <TabsTrigger value="contratos">Contratos</TabsTrigger>
+            <TabsTrigger value="faturas">Faturas</TabsTrigger>
             <TabsTrigger value="ajustes">Ajustes</TabsTrigger>
           </TabsList>
         </div>
@@ -22,11 +22,11 @@ export default function App() {
         <TabsContent value="contratos" className="w-screen px-10 py-3">
           <Contratos />
         </TabsContent>
-        <TabsContent value="resultados">
+        <TabsContent value="faturas">
           <Card>
             <CardHeader>
               <CardTitle>Resultados</CardTitle>
-              <CardDescription>Aqui você pode analisar os resultados da sua empresa.</CardDescription>
+              <CardDescription>Aqui você pode analisar as parcelas dos clientes.</CardDescription>
             </CardHeader>
             <CardContent>
             </CardContent>
@@ -36,7 +36,7 @@ export default function App() {
           <Card>
             <CardHeader>
               <CardTitle>Ajustes</CardTitle>
-              <CardDescription>Aqui você pode realizar ajustes a aplicação.</CardDescription>
+              <CardDescription>Aqui você pode realizar ajustes na aplicação.</CardDescription>
             </CardHeader>
             <CardContent>
 
