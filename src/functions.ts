@@ -108,11 +108,22 @@ export function parseDate(dateStr: string): Date | null {
     return null;
 }
 
-export function convertIsoToDate(isoDateStr: string): string {  
+export function convertIsoToDate(isoDateStr: string): string {
     const date = new Date(isoDateStr);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
+}
+
+export function isValidDate(dateStr: string): boolean {
+    const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    const match = dateStr.match(regex);
+    if (!match) return false;
+    const [_, day, month, year] = match.map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year &&
+        date.getMonth() === month - 1 &&
+        date.getDate() === day;
 }
 

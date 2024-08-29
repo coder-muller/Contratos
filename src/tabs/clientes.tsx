@@ -3,7 +3,7 @@ import { Trash, PlusCircle, Pencil, Search } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { Dialog, DialogHeader, DialogContent, DialogFooter, DialogClose } from '../components/ui/dialog';
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from '../components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '../components/ui/table';
 import { useState, useEffect, useRef } from 'react';
 import IMask from 'imask';
@@ -54,7 +54,7 @@ export default function Clientes() {
                     });
                 }
                 if (cepRef.current) {
-                    IMask(cepRef.current, {
+                    IMask(cepRef.current, { 
                         mask: '00000-000',
                     });
                 }
@@ -191,10 +191,7 @@ export default function Clientes() {
                         />
                     </div>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <Button className="my-3 " onClick={handleAdd}>
-                            <PlusCircle className="w-4 h-4 mr-2" />
-                            Adicionar
-                        </Button>
+                        <Button className="my-3 " onClick={handleAdd}>Novo Cliente</Button>
                         <DialogContent>
                             <DialogHeader><span className="text-2xl font-bold">Adicionar cliente</span></DialogHeader>
                             <form onSubmit={handleSubmit} className="flex flex-col gap-2">

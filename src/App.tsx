@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 
 import Contratos from './tabs/contratos';
 import Clientes from './tabs/clientes';
+import Ajustes from "./tabs/ajustes";
 
 export default function App() {
   return (
@@ -17,7 +18,7 @@ export default function App() {
           </TabsList>
         </div>
         <TabsContent value="clientes" className="w-screen px-10 py-3">
-          <Clientes/>
+          <Clientes />
         </TabsContent>
         <TabsContent value="contratos" className="w-screen px-10 py-3">
           <Contratos />
@@ -33,15 +34,7 @@ export default function App() {
           </Card>
         </TabsContent>
         <TabsContent value="ajustes">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ajustes</CardTitle>
-              <CardDescription>Aqui você pode realizar ajustes na aplicação.</CardDescription>
-            </CardHeader>
-            <CardContent>
-
-            </CardContent>
-          </Card>
+          <Ajustes />
         </TabsContent>
       </Tabs>
     </div>

@@ -185,10 +185,7 @@ export default function Contratos() {
                         </Select>
                     </div>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <Button className='my-3' onClick={handleAdd}>
-                            <PlusCircle className="w-4 h-4 mr-2" />
-                            Adicionar Contrato
-                        </Button>
+                        <Button className='my-3' onClick={handleAdd}>Novo Contrato</Button>
                         <DialogContent>
                             <DialogHeader><span className="text-2xl font-bold">Adicionar contrato</span></DialogHeader>
                             <form className='flex flex-col gap-2' onSubmit={handleSubmit}>
