@@ -194,7 +194,7 @@ export default function Clientes() {
                         <Button className="my-3 " onClick={handleAdd}>Novo Cliente</Button>
                         <DialogContent>
                             <DialogHeader><span className="text-2xl font-bold">Adicionar cliente</span></DialogHeader>
-                            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+                            <form className="flex flex-col gap-2">
                                 <Input placeholder="Razão Social" type="text" className='col-span-2' value={razaoSocial} onChange={(e: any) => setRazaoSocial(e.target.value)} />
                                 <Input placeholder="Nome Fantasia" type="text" className='col-span-2' value={nomeFantasia} onChange={(e: any) => setNomeFantasia(e.target.value)} />
                                 <div className="grid grid-cols-5 gap-2">
@@ -226,7 +226,8 @@ export default function Clientes() {
                                     <Input placeholder="Email" type="email" className='col-span-6' value={email} onChange={(e: any) => setEmail(e.target.value)} />
                                 </div>
                                 <DialogFooter className="mt-2">
-                                    <Button type="submit">Salvar</Button>
+                                    <Button variant={"outline"}>Cancelar</Button>
+                                    <Button onClick={handleSubmit}>Salvar</Button>
                                 </DialogFooter>
                             </form>
                         </DialogContent>
