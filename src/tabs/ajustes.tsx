@@ -2,11 +2,11 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "../co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import Corretores from "../tabs/corretores";
 import FormaPagamento from "../tabs/formaPagamento";
+import Programacao from "../tabs/programacao";
 
 
 
 export default function Ajustes() {
-
     return (
         <div className="w-screen p-6">
             <Card className="w-full">
@@ -28,8 +28,8 @@ export default function Ajustes() {
                                 <Corretores />
                             </TabsContent>
                             <TabsContent value="programacao">
-                                
-                            </TabsContent>
+                                <Programacao />
+                            </TabsContent>  
                             <TabsContent value="formaPagameneto">
                                 <FormaPagamento />
                             </TabsContent>

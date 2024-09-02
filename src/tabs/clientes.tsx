@@ -1,12 +1,12 @@
 import { sendGet, sendPost, sendPut, sendDelete } from '../functions';
-import { Trash, PlusCircle, Pencil, Search } from 'lucide-react';
+import { Trash, Pencil, Search } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
-import { Input } from '../components/ui/input';
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from '../components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '../components/ui/table';
 import { useState, useEffect, useRef } from 'react';
 import IMask from 'imask';
+import { Input } from '../components/ui/input';
 
 export default function Clientes() {
 

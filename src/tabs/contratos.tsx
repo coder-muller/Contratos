@@ -1,107 +1,174 @@
 import { useEffect, useState, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { PlusCircle } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogFooter } from "../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogClose } from "../components/ui/dialog";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/ui/table";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from "../components/ui/select";
 import { Input } from "../components/ui/input";
 import { Trash, Pencil } from "lucide-react";
-import { convertIsoToDate, sendGet, sendDelete, sendPost, sendPut, parseDate } from "../functions";
+import { convertIsoToDate, sendGet, sendDelete, sendPost, sendPut, parseDate, getDataFromId, floatParaInput, converterParaNumero, isValidDate, getIdFromData } from "../functions";
 import IMask from 'imask';
 
 export default function Contratos() {
 
-    const [clientes, setClientes] = useState<any[]>([]);
-    const [contratos, setContratos] = useState<any[]>([]);
-    const [representantes, setRepresentantes] = useState<any[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedContrato, setSelectedContrato] = useState<any>(null);
 
-    const [cliente, setCliente] = useState<any>(null);
-    const [representante, setRepresentante] = useState<any>(null);
-    const [descritivo, setDescritivo] = useState<string>('');
-    const [valor, setValor] = useState<number>(0);
-    const [dataContrato, setDataContrato] = useState<string>('');
-    const [dataInicio, setDataInicio] = useState<string>('');
-    const [dataFinal, setDataFinal] = useState<string>('');
-    const [observacao, setObservacao] = useState<string>('');
+    const valorRef = useRef(null);
+    const dataEmissaoRef = useRef(null);
 
-    const valorRef = useRef<HTMLInputElement>(null);
-    const dataContratoRef = useRef<HTMLInputElement>(null);
-    const dataInicioRef = useRef<HTMLInputElement>(null);
-    const dataFinalRef = useRef<HTMLInputElement>(null);
+    const [clientes, setClientes] = useState<any[]>([]);
+    const [contratos, setContratos] = useState<any[]>([]);
+    const [corretores, setCorretores] = useState<any[]>([]);
+    const [programas, setProgramas] = useState<any[]>([]);
+    const [formasPagamento, setFormasPagamento] = useState<any[]>([]);
+
+    const [cliente, setCliente] = useState('');
+    const [programa, setPrograma] = useState('');
+    const [dataEmissao, setDataEmissao] = useState('');
+    const [numeroInsercoes, setNumeroInsercoes] = useState('');
+    const [valor, setValor] = useState('');
+    const [formaPagamento, setFormaPagamento] = useState('');
+    const [comissao, setComissao] = useState('');
+    const [status, setStatus] = useState('');
+    const [corretor, setCorretor] = useState('');
+    const [descritivo, setDescritivo] = useState('');
 
     useEffect(() => {
-        //loadContratos();
-        loadClientes()
-        loadRepresentantes();
+        loadContratos();
+        loadClientes();
+        loadProgramas();
+        loadCorretores();
+        loadFormasPagamento();
     }, [])
 
     useEffect(() => {
         if (isDialogOpen) {
-          const applyMasks = () => {
-            if (valorRef.current) {
-              IMask(valorRef.current, {
-                mask: 'R$ num',
-                blocks: {
-                  num: {
-                    mask: Number,
-                    thousandsSeparator: '.',
-                    radix: ',',
-                    scale: 2,
-                    signed: false,
-                  },
-                },
-              });
+            const applyMasks = () => {
+                if (valorRef.current) {
+                    IMask(valorRef.current, {
+                        mask: 'R$ num',
+                        blocks: {
+                            num: {
+                                mask: Number,
+                                thousandsSeparator: '.',
+                                radix: ',',
+                                scale: 2,
+                                signed: false,
+                                normalizeZeros: true,
+                            },
+                        },
+                    });
+                }
+                if (dataEmissaoRef.current) {
+                    IMask(dataEmissaoRef.current, {
+                        mask: '00/00/0000',
+                    });
+                }
             }
-            if (dataContratoRef.current) {
-              IMask(dataContratoRef.current, {
-                mask: '00/00/0000',
-              });
-            }
-            if (dataInicioRef.current) {
-              IMask(dataInicioRef.current, {
-                mask: '00/00/0000',
-              });
-            }
-            if (dataFinalRef.current) {
-              IMask(dataFinalRef.current, {
-                mask: '00/00/0000',
-              });
-            }
-          };
-          const timer = setTimeout(applyMasks, 100);
-          return () => clearTimeout(timer);
+            const timer = setTimeout(applyMasks, 100);
+            return () => clearTimeout(timer);
         }
-      }, [isDialogOpen]);
-      
+    }, [isDialogOpen]);
+
+    const loadContratos = async () => {
+        try {
+            const response = await sendGet('/contratos/04390988077');
+            if (response) {
+                const contratosCompletos = await Promise.all(response.map(async (contrato: any) => {
+                    const valorNumerico = parseFloat(contrato.valor);
+                    const valorString = valorNumerico.toFixed(2).replace('.', ',');
+
+                    const maskedValue = IMask.createMask({
+                        mask: 'R$ num',
+                        blocks: {
+                            num: {
+                                mask: Number,
+                                thousandsSeparator: '.',
+                                radix: ',',
+                                scale: 2,
+                                signed: false,
+                                normalizeZeros: true,
+                                padFractionalZeros: true,
+                            }
+                        }
+                    });
+                    maskedValue.resolve(valorString);
+                    const valorFinal = maskedValue.value;
+                    const comissaoString = (contrato.comissao).toString();
+                    const comissaoFinal = (comissaoString).replace('.', ',');
+
+                    const clienteNome = await getDataFromId(contrato.id_cliente, '/clientes/04390988077', 'nomeFantasia');
+                    const programaNome = await getDataFromId(contrato.id_programa, '/programacao/04390988077', 'programa');
+                    const corretorNome = await getDataFromId(contrato.id_corretor, '/corretores/04390988077', 'nome');
+                    const formaPagamentoDescricao = await getDataFromId(contrato.id_formaPagamento, '/formaPagamento/04390988077', 'formaPagamento');
+
+                    return {
+                        ...contrato,
+                        comissaoFinal,
+                        valorFinal, // Usa o valor formatado aqui
+                        clienteNome,
+                        programaNome,
+                        corretorNome,
+                        formaPagamentoDescricao,
+                    };
+                }));
+                setContratos(contratosCompletos);
+            } else {
+                alert("Erro ao carregar os contratos!");
+            }
+        } catch (error) {
+            console.error("Error loading contratos:", error);
+            alert("Ocorreu um erro ao carregar os contratos!");
+        }
+    };
 
     const loadClientes = async () => {
         const response = await sendGet('/clientes/04390988077');
-        setClientes(response);
+        if (response) {
+            setClientes(response);
+        } else {
+            alert("Erro ao carregar os clientes!");
+        }
     }
 
-    /*
-    const loadContratos = async () => {
-        const response = await sendGet('/contratos/04390988077');
-        setContratos(response);
-    } 
-    */
+    const loadProgramas = async () => {
+        const response = await sendGet('/programacao/04390988077');
+        if (response) {
+            setProgramas(response);
+        } else {
+            alert("Erro ao carregar os programas!");
+        }
+    }
 
-    const loadRepresentantes = async () => {
+    const loadCorretores = async () => {
         const response = await sendGet('/corretores/04390988077');
-        setRepresentantes(response);
+        if (response) {
+            setCorretores(response);
+        } else {
+            alert("Erro ao carregar os corretores!");
+        }
+    }
+
+    const loadFormasPagamento = async () => {
+        const response = await sendGet('/formaPagamento/04390988077');
+        if (response) {
+            setFormasPagamento(response);
+        } else {
+            alert("Erro ao carregar os formas de pagamento!");
+        }
     }
 
     const handleDelete = async (id: string) => {
-        const body = { usuario: 'Guilherme' };
-        const response = await sendDelete(`/contratos/${id}`, body);
-        if (response.status === 200) {
-            //loadContratos();
-        } else {
-            alert("Erro ao deletar o contrato!");
-            console.log(response);
+        if (confirm('Tem certeza que deseja excluir este contrato?')) {
+            const body = { usuario: 'Guilherme' };
+            const response = await sendDelete(`/contratos/${id}`, body);
+            if (response) {
+                loadContratos();
+            } else {
+                alert("Erro ao deletar o contrato!");
+                console.log(response);
+            }
         }
     }
 
@@ -109,59 +176,112 @@ export default function Contratos() {
         setSelectedContrato(null);
         resetForm();
         setIsDialogOpen(true);
-    };
+    }
 
     const resetForm = () => {
-        setCliente(null);
-        setRepresentante(null);
-        setDescritivo('');
-        setValor(0);
-        setDataContrato('');
-        setDataInicio('');
-        setDataFinal('');
-        setObservacao('');
-    };
+        setCliente('');
+        setPrograma('');
+        setDataEmissao('')
+        setNumeroInsercoes('')
+        setValor('')
+        setFormaPagamento('')
+        setComissao('')
+        setStatus('')
+        setCorretor('')
+        setDescritivo('')
+    }
+
+    async function handleEdit(contrato: any) {
+        setSelectedContrato(contrato);
+        const [cliente, programa, formaPagamento, corretor] = await Promise.all([
+            getDataFromId(contrato.id_cliente, '/clientes/04390988077', 'nomeFantasia'),
+            getDataFromId(contrato.id_programa, '/programacao/04390988077', 'programa'),
+            getDataFromId(contrato.id_formaPagamento, '/formaPagamento/04390988077', 'formaPagamento'),
+            getDataFromId(contrato.id_corretor, '/corretores/04390988077', 'nome')
+        ]);
+        setCliente(cliente);
+        setPrograma(programa);
+        setFormaPagamento(formaPagamento);
+        setCorretor(corretor);
+        setDataEmissao(convertIsoToDate(contrato.dataEmissao));
+        setNumeroInsercoes(contrato.numInsercoes);
+        setValor(floatParaInput(contrato.valor));
+        setComissao(contrato.comissao);
+        setStatus(contrato.status);
+        setDescritivo(contrato.descritivo);
+        setIsDialogOpen(true);
+    }
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const body = {
-            chave: '04390988077',
-            id_cliente: cliente,
-            is_representante: representante,
-            descritivo,
-            valor,
-            data_contrato: dataContrato ? parseDate(dataContrato) : '',
-            veic_inicio: dataInicio ? parseDate(dataInicio) : '',
-            veic_termino: dataFinal ? parseDate(dataFinal) : '',
-            observacao
-        };
-        try {
-            if (selectedContrato) {
-                await sendPut(`/contratos/${selectedContrato.id}`, body);
-                setSelectedContrato(null);
+        if (cliente && programa) {
+            if (dataEmissao) {
+                if (isValidDate(dataEmissao)) {
+                    const body = {
+                        chave: '04390988077',
+                        id_cliente: await getIdFromData(cliente, 'nomeFantasia', '/clientes/04390988077'),
+                        id_programa: await getIdFromData(programa, 'programa', '/programacao/04390988077'),
+                        dataEmissao: dataEmissao ? parseDate(dataEmissao) : '',
+                        numInsercoes: numeroInsercoes,
+                        valor: converterParaNumero(valor),
+                        id_formaPagamento: await getIdFromData(formaPagamento, 'formaPagamento', '/formaPagamento/04390988077'),
+                        comissao,
+                        status,
+                        id_corretor: await getIdFromData(corretor, 'nome', '/corretores/04390988077'),
+                        descritivo
+                    };
+                    console.log(body);
+                    try {
+                        if (selectedContrato) {
+                            await sendPut(`/contratos/${selectedContrato.id}`, body);
+                            setSelectedContrato(null);
+                        } else {
+                            await sendPost('/contratos', body);
+                        }
+                        loadContratos();
+                        setIsDialogOpen(false);
+                        resetForm();
+                    }
+                    catch (error) {
+                        alert('Erro ao processar a solicitação');
+                    }
+                } else {
+                    alert('A data de emissão não é valida');
+                }
             } else {
-                await sendPost('/contratos', body);
+                const body = {
+                    chave: '04390988077',
+                    id_cliente: await getIdFromData(cliente, 'nomeFantasia', '/clientes/04390988077'),
+                    id_programa: await getIdFromData(programa, 'programa', '/programacao/04390988077'),
+                    dataEmissao: dataEmissao ? parseDate(dataEmissao) : '',
+                    numInsercoes: numeroInsercoes,
+                    valor: converterParaNumero(valor),
+                    id_formaPagamento: await getIdFromData(formaPagamento, 'formaPagamento', '/formaPagamento/04390988077'),
+                    comissao,
+                    status,
+                    id_corretor: await getIdFromData(corretor, 'nome', '/corretores/04390988077'),
+                    descritivo
+                };
+                try {
+                    if (selectedContrato) {
+                        await sendPut(`/contratos/${selectedContrato.id}`, body);
+                        setSelectedContrato(null);
+                    } else {
+                        await sendPost('/contratos', body);
+                    }
+                    loadContratos();
+                    setIsDialogOpen(false);
+                    resetForm();
+                }
+                catch (error) {
+                    alert('Erro ao processar a solicitação');
+                }
             }
-            //loadContratos();
-            setIsDialogOpen(false);
-            resetForm();
-        } catch (error) {
-            alert('Erro ao processar a solicitação');
+        } else {
+            alert("Preencha os campos obrigatórios (Cliente e Programa)!")
         }
-    };
-
-    const handleEdit = (contrato: any) => {
-        setSelectedContrato(contrato);
-        setCliente(contrato.cliente.id);
-        setRepresentante(contrato.representante.id);
-        setDescritivo(contrato.descritivo);
-        setValor(contrato.valor);
-        setDataContrato(contrato.dataContrato);
-        setDataInicio(contrato.dataInicio);
-        setDataFinal(contrato.dataFinal);
-        setObservacao(contrato.observacao);
-        setIsDialogOpen(true);
-    };
+    }
 
     return (
         <Card>
@@ -172,7 +292,7 @@ export default function Contratos() {
             <CardContent>
                 <div className='flex items-center justify-between w-11/12 m-auto'>
                     <div className='w-1/6'>
-                        <Select>
+                        <Select onValueChange={(value) => setStatus(value)}>
                             <SelectTrigger>
                                 <SelectValue placeholder='Status'></SelectValue>
                             </SelectTrigger>
@@ -188,44 +308,83 @@ export default function Contratos() {
                         <Button className='my-3' onClick={handleAdd}>Novo Contrato</Button>
                         <DialogContent>
                             <DialogHeader><span className="text-2xl font-bold">Adicionar contrato</span></DialogHeader>
-                            <form className='flex flex-col gap-2' onSubmit={handleSubmit}>
-                                <Select>
+                            <form className='flex flex-col gap-2'>
+                                <Select onValueChange={(value) => setCliente(value)} value={cliente}>
                                     <SelectTrigger>
                                         <SelectValue placeholder='Cliente'></SelectValue>
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectGroup>
                                             {clientes.map((cliente) => (
-                                                <SelectItem key={cliente.id} value={cliente.nomeFantasia} onClick={() => setCliente(cliente.id)}>{cliente.nomeFantasia}</SelectItem>
+                                                <SelectItem key={cliente.id} value={cliente.nomeFantasia}>{cliente.nomeFantasia}</SelectItem>
                                             ))}
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
-                                <Select>
+                                <Select onValueChange={(value) => setPrograma(value)} value={programa}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder='Representante'></SelectValue>
+                                        <SelectValue placeholder='Programa'></SelectValue>
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectGroup>
-                                            {representantes.map((representante) => (
-                                                <SelectItem key={representante.id} value={representante.nome} onClick={() => setRepresentante(representante.id)}>{representante.nome}</SelectItem>
+                                            {programas.map((programa) => (
+                                                <SelectItem key={programa.id} value={programa.programa}>{programa.programa}</SelectItem>
                                             ))}
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
-                                <Input placeholder='Descritivo' type='text' className='col-span-2' value={descritivo} onChange={(e: any) => setDescritivo(e.target.value)} />
-                                <div className='grid grid-cols-6 gap-2'>
-                                    <Input placeholder='Valor' type='text' className='col-span-3' value={valor} ref={valorRef} onChange={(e: any) => setValor(e.target.value)} />
-                                    <Input placeholder='Data do Contrato' type='text' className='col-span-3' value={dataContrato} ref={dataContratoRef} onChange={(e: any) => setDataContrato(e.target.value)} />
+                                <div className="grid grid-cols-2 gap-2">
+                                    <Input placeholder='Data de Emissão' type='text' value={dataEmissao} ref={dataEmissaoRef} onChange={(e: any) => setDataEmissao(e.target.value)} />
+                                    <Input placeholder='Número de Inserções' type='number' value={numeroInsercoes} onChange={(e: any) => setNumeroInsercoes(e.target.value)} />
                                 </div>
-                                <div className='grid grid-cols-2 gap-2'>
-                                    <Input placeholder='Início da Veiculação' type='text' value={dataInicio} ref={dataInicioRef} onChange={(e: any) => setDataInicio(e.target.value)} />
-                                    <Input placeholder='Término da Veiculação' type='text' value={dataFinal} ref={dataFinalRef} onChange={(e: any) => setDataFinal(e.target.value)} />
+                                <div className="grid grid-cols-2 gap-2">
+                                    <Input placeholder='Valor' type='text' value={valor} ref={valorRef} onChange={(e: any) => setValor(e.target.value)} />
+                                    <Select onValueChange={(value) => setFormaPagamento(value)} value={formaPagamento}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder='Forma de Pagamento'></SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                {formasPagamento.map((formas) => (
+                                                    <SelectItem key={formas.id} value={formas.formaPagamento}>{formas.formaPagamento}</SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                <Input placeholder='Observação' type='text' value={observacao} onChange={(e: any) => setObservacao(e.target.value)} />
+                                <div className="grid grid-cols-2 gap-2">
+                                    <Input placeholder="Comissão" type="number" value={comissao} onChange={(e: any) => setComissao(e.target.value)} />
+                                    <Select onValueChange={(value) => setStatus(value)} value={status}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder='Status'></SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectItem value="ativo">Ativo</SelectItem>
+                                                <SelectItem value="inativo">Inativo</SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <Select onValueChange={(value) => setCorretor(value)} value={corretor}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder='Corretor'></SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            {corretores.map((corretor) => (
+                                                <SelectItem key={corretor.id} value={corretor.nome}>{corretor.nome}</SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                                <Input placeholder='Descritivo' type='text' value={descritivo} onChange={(e: any) => setDescritivo(e.target.value)} />
                             </form>
                             <DialogFooter className="mt-2">
-                                <Button type="submit">Salvar</Button>
+                                <DialogClose asChild>
+                                    <Button variant={"outline"}>Cancelar</Button>
+                                </DialogClose>
+                                <Button onClick={handleSubmit}>Salvar</Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
@@ -235,13 +394,12 @@ export default function Contratos() {
                     <Table className="w-full">
                         <TableHeader>
                             <TableRow>
-                                <TableHead align="left">Empresa</TableHead>
-                                <TableHead align="left">Contrato</TableHead>
-                                <TableHead align="left">Data Inicio</TableHead>
-                                <TableHead align="left">Data Final</TableHead>
                                 <TableHead align="left">Cliente</TableHead>
+                                <TableHead align="left">Emissão</TableHead>
+                                <TableHead align="left">Programa</TableHead>
                                 <TableHead align="left">Valor</TableHead>
-                                <TableHead align="left">Parcelas</TableHead>
+                                <TableHead align="left">Corretor</TableHead>
+                                <TableHead align="left">Comissão</TableHead>
                                 <TableHead></TableHead>
                                 <TableHead></TableHead>
                             </TableRow>
@@ -249,13 +407,12 @@ export default function Contratos() {
                         <TableBody>
                             {contratos.map((contrato) => (
                                 <TableRow key={contrato.id}>
-                                    <TableCell>{contrato.empresa.nome}</TableCell>
-                                    <TableCell>{contrato.contrato}</TableCell>
-                                    <TableCell>{convertIsoToDate(contrato.dt_inicio)}</TableCell>
-                                    <TableCell>{convertIsoToDate(contrato.dt_final)}</TableCell>
-                                    <TableCell>{contrato.cliente.nome}</TableCell>
-                                    <TableCell>{contrato.valor}</TableCell>
-                                    <TableCell>{contrato.parcelas}</TableCell>
+                                    <TableCell>{contrato.clienteNome}</TableCell>
+                                    <TableCell>{convertIsoToDate(contrato.dataEmissao)}</TableCell>
+                                    <TableCell>{contrato.programaNome}</TableCell>
+                                    <TableCell>{contrato.valorFinal}</TableCell>
+                                    <TableCell>{contrato.corretorNome}</TableCell>
+                                    <TableCell>{(contrato.comissaoFinal)}%</TableCell>
                                     <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => handleDelete(contrato.id)} /></TableCell>
                                     <TableCell><Pencil className="w-4 h-4 cursor-pointer" onClick={() => handleEdit(contrato)} /></TableCell>
                                 </TableRow>

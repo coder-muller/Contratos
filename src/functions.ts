@@ -127,3 +127,45 @@ export function isValidDate(dateStr: string): boolean {
         date.getDate() === day;
 }
 
+export function converterParaNumero(valorTexto: string): string {
+    let valorfinal = valorTexto.replace('R$', '').trim();
+    valorfinal = valorfinal.replace('.', '');
+    valorfinal = valorfinal.replace(',', '.');
+    return valorfinal;
+}
+
+export function floatParaInput(valorTexto: string): string {
+    let valorFloat = valorTexto.toString().replace('.', ',');
+    return valorFloat;
+}
+
+export function getNextMonthDate(day: number): Date {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+    const nextMonthYear = currentMonth === 11 ? today.getFullYear() + 1 : today.getFullYear();
+    const nextMonthDate = new Date(nextMonthYear, nextMonth, day);
+    return nextMonthDate;
+}
+
+export async function getDataFromId(id: string, route: string, fieldName: string): Promise<string> {
+    const response = await sendGet(route);
+    const data = response.find(item => item.id === id);
+    
+    if (data && fieldName in data) {
+        return String(data[fieldName]);
+    }
+    return 'erro'; 
+}
+export async function getIdFromData(data: any, fieldName: string, route: string ) : Promise<string> {
+    const response = await sendGet(route);
+    const id = response.find(item => item[fieldName] === data);
+    if (id) {
+        return String(id.id);
+    }   
+    return 'erro'; 
+}
+
+
+
+
