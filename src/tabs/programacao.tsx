@@ -6,6 +6,7 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { Input } from "../components/ui/input";
 import { Trash, Pencil } from 'lucide-react';
 import IMask from 'imask';
+import { Label } from "../components/ui/label";
 
 export default function Programacao() {
 
@@ -181,17 +182,38 @@ export default function Programacao() {
                         <DialogHeader>
                             <DialogTitle>Novo Programa</DialogTitle>
                         </DialogHeader>
-                        <form action="" className="flex flex-col gap-2">
-                            <Input type="text" placeholder="Programa" value={programa} onChange={(e) => setPrograma(e.target.value)} />
-                            <Input type="text" placeholder="Apresentador" value={apresentador} onChange={(e) => setApresentedor(e.target.value)} />
-                            <div className="grid grid-cols-2 gap-2">
-                                <Input type="text" placeholder="Hora Inicio" ref={horaInicioRef} value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
-                                <Input type="text" placeholder="Hora Fim" ref={horaFimRef} value={horaFim} onChange={(e) => setHoraFim(e.target.value)} />
+                        <form action="" className="flex flex-col">
+                            <div>
+                                <Label>Programa</Label>
+                                <Input type="text" placeholder="Programa" value={programa} onChange={(e) => setPrograma(e.target.value)} />
                             </div>
-                            <Input type="text" placeholder="Dias" value={dias} onChange={(e) => setDias(e.target.value)} />
-                            <div className="grid grid-cols-5 gap-2">
-                                <Input type="text" placeholder="Estilo" className="col-span-3" value={estilo} onChange={(e) => setEstilo(e.target.value)} />
-                                <Input type="text" placeholder="Valor do Patrocínio" ref={valorPatrocinioRef} className="col-span-2" value={valorPatrocinio} onChange={(e) => setValorPatrocinio(e.target.value)} />
+                            <div>
+                                <Label>Apresentador</Label>
+                                <Input type="text" placeholder="Apresentador" value={apresentador} onChange={(e) => setApresentedor(e.target.value)} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <Label>Hora Inicio</Label>
+                                    <Input type="text" placeholder="Hora Inicio" ref={horaInicioRef} value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
+                                </div>
+                                <div>
+                                    <Label>Hora Fim</Label>
+                                    <Input type="text" placeholder="Hora Fim" ref={horaFimRef} value={horaFim} onChange={(e) => setHoraFim(e.target.value)} />
+                                </div>
+                            </div>
+                            <div>
+                                <Label>Dias</Label>
+                                <Input type="text" placeholder="Dias" value={dias} onChange={(e) => setDias(e.target.value)} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <Label>Estilo</Label>
+                                    <Input type="text" placeholder="Estilo" className="col-span-3" value={estilo} onChange={(e) => setEstilo(e.target.value)} />
+                                </div>
+                                <div>
+                                    <Label>Valor do Patrocínio</Label>
+                                    <Input type="text" placeholder="Valor do Patrocínio" ref={valorPatrocinioRef} className="col-span-2" value={valorPatrocinio} onChange={(e) => setValorPatrocinio(e.target.value)} />
+                                </div>
                             </div>
                             <DialogFooter className="mt-2">
                                 <DialogClose asChild>

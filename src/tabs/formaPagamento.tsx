@@ -5,6 +5,7 @@ import { sendGet, sendDelete, sendPost, sendPut } from "../functions";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Trash, Pencil } from 'lucide-react';
+import { Label } from "../components/ui/label";
 
 export default function FormaPagamento() { 
 
@@ -126,7 +127,10 @@ export default function FormaPagamento() {
                             <DialogTitle>Nova Forma de Pagamento</DialogTitle>
                         </DialogHeader>
                         <form action="" className="flex flex-col gap-3">
-                            <Input type="text" placeholder="Forma de Pagamento" value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)} />
+                            <div>
+                                <Label>Forma de Pagamento</Label>
+                                <Input type="text" placeholder="Forma de Pagamento" value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)} />
+                            </div>
                             <DialogFooter>
                                 <DialogClose asChild>
                                     <Button variant={"outline"}>Cancelar</Button>

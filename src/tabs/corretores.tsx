@@ -6,6 +6,7 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { Input } from "../components/ui/input";
 import { Trash, Pencil } from 'lucide-react';
 import IMask from 'imask';
+import { Label } from "../components/ui/label";
 
 
 export default function Corretores() {
@@ -186,15 +187,30 @@ export default function Corretores() {
                         <DialogHeader>
                             <DialogTitle>Novo Corretor</DialogTitle>
                         </DialogHeader>
-                        <form action="" className="flex flex-col gap-3">
-                            <Input type="text" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
-                            <Input type="text" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                            <Input type="text" placeholder="Endereço" value={endereco} onChange={(e) => setEndereco(e.target.value)} />
-                            <div className="grid grid-cols-2 gap-2">
-                                <Input type="text" placeholder="Fone" value={fone} onChange={(e) => setFone(e.target.value)} />
-                                <Input type="text" placeholder="Data de Admissão" ref={dataAdmissaoRef} value={dataAdmissao} onChange={(e) => setDataAdmissao(e.target.value)} />
+                        <form action="" className="flex flex-col">
+                            <div>
+                                <Label>Nome</Label>
+                                <Input type="text" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
                             </div>
-                            <DialogFooter>
+                            <div>
+                                <Label>Email</Label>
+                                <Input type="text" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                            </div>
+                            <div>
+                                <Label>Endereço</Label>
+                                <Input type="text" placeholder="Endereço" value={endereco} onChange={(e) => setEndereco(e.target.value)} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <Label>Fone</Label>
+                                    <Input type="text" placeholder="Fone" value={fone} onChange={(e) => setFone(e.target.value)} />
+                                </div>
+                                <div>
+                                    <Label>Data de Admissão</Label>
+                                    <Input type="text" placeholder="Data de Admissão" ref={dataAdmissaoRef} value={dataAdmissao} onChange={(e) => setDataAdmissao(e.target.value)} />
+                                </div>
+                            </div>
+                            <DialogFooter className="mt-4">
                                 <DialogClose asChild>
                                     <Button variant={"outline"}>Cancelar</Button>
                                 </DialogClose>

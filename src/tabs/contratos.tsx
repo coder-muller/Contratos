@@ -8,6 +8,7 @@ import { Input } from "../components/ui/input";
 import { Trash, Pencil } from "lucide-react";
 import { convertIsoToDate, sendGet, sendDelete, sendPost, sendPut, parseDate, getDataFromId, floatParaInput, converterParaNumero, isValidDate, getIdFromData } from "../functions";
 import IMask from 'imask';
+import { Label } from "../components/ui/label";
 
 export default function Contratos() {
 
@@ -33,6 +34,7 @@ export default function Contratos() {
     const [status, setStatus] = useState('');
     const [corretor, setCorretor] = useState('');
     const [descritivo, setDescritivo] = useState('');
+    const [diaVencimento, setDiaVencimento] = useState('');
 
     useEffect(() => {
         loadContratos();
@@ -189,6 +191,7 @@ export default function Contratos() {
         setStatus('')
         setCorretor('')
         setDescritivo('')
+        setDiaVencimento('')
     }
 
     async function handleEdit(contrato: any) {
@@ -209,6 +212,7 @@ export default function Contratos() {
         setComissao(contrato.comissao);
         setStatus(contrato.status);
         setDescritivo(contrato.descritivo);
+        setDiaVencimento(contrato.diaVencimento);
         setIsDialogOpen(true);
     }
 
@@ -226,6 +230,7 @@ export default function Contratos() {
                         numInsercoes: numeroInsercoes,
                         valor: converterParaNumero(valor),
                         id_formaPagamento: await getIdFromData(formaPagamento, 'formaPagamento', '/formaPagamento/04390988077'),
+                        diaVencimento,
                         comissao,
                         status,
                         id_corretor: await getIdFromData(corretor, 'nome', '/corretores/04390988077'),
@@ -256,6 +261,7 @@ export default function Contratos() {
                     id_programa: await getIdFromData(programa, 'programa', '/programacao/04390988077'),
                     dataEmissao: dataEmissao ? parseDate(dataEmissao) : '',
                     numInsercoes: numeroInsercoes,
+                    diaVencimento,
                     valor: converterParaNumero(valor),
                     id_formaPagamento: await getIdFromData(formaPagamento, 'formaPagamento', '/formaPagamento/04390988077'),
                     comissao,
@@ -308,77 +314,111 @@ export default function Contratos() {
                         <Button className='my-3' onClick={handleAdd}>Novo Contrato</Button>
                         <DialogContent>
                             <DialogHeader><span className="text-2xl font-bold">Adicionar contrato</span></DialogHeader>
-                            <form className='flex flex-col gap-2'>
-                                <Select onValueChange={(value) => setCliente(value)} value={cliente}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder='Cliente'></SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {clientes.map((cliente) => (
-                                                <SelectItem key={cliente.id} value={cliente.nomeFantasia}>{cliente.nomeFantasia}</SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                <Select onValueChange={(value) => setPrograma(value)} value={programa}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder='Programa'></SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {programas.map((programa) => (
-                                                <SelectItem key={programa.id} value={programa.programa}>{programa.programa}</SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Input placeholder='Data de Emissão' type='text' value={dataEmissao} ref={dataEmissaoRef} onChange={(e: any) => setDataEmissao(e.target.value)} />
-                                    <Input placeholder='Número de Inserções' type='number' value={numeroInsercoes} onChange={(e: any) => setNumeroInsercoes(e.target.value)} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Input placeholder='Valor' type='text' value={valor} ref={valorRef} onChange={(e: any) => setValor(e.target.value)} />
-                                    <Select onValueChange={(value) => setFormaPagamento(value)} value={formaPagamento}>
+                            <form className='flex flex-col'>
+                                <div>
+                                    <Label>Cliente</Label>
+                                    <Select onValueChange={(value) => setCliente(value)} value={cliente}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder='Forma de Pagamento'></SelectValue>
+                                            <SelectValue placeholder='Cliente'></SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
-                                                {formasPagamento.map((formas) => (
-                                                    <SelectItem key={formas.id} value={formas.formaPagamento}>{formas.formaPagamento}</SelectItem>
+                                                {clientes.map((cliente) => (
+                                                    <SelectItem key={cliente.id} value={cliente.nomeFantasia}>{cliente.nomeFantasia}</SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label>Programa</Label>
+                                    <Select onValueChange={(value) => setPrograma(value)} value={programa}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder='Programa'></SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                {programas.map((programa) => (
+                                                    <SelectItem key={programa.id} value={programa.programa}>{programa.programa}</SelectItem>
                                                 ))}
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
-                                    <Input placeholder="Comissão" type="number" value={comissao} onChange={(e: any) => setComissao(e.target.value)} />
-                                    <Select onValueChange={(value) => setStatus(value)} value={status}>
+                                    <div>
+                                        <Label>Data de Emissão</Label>
+                                        <Input placeholder='Data de Emissão' type='text' value={dataEmissao} ref={dataEmissaoRef} onChange={(e: any) => setDataEmissao(e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <Label>Número de Inserções</Label>
+                                        <Input placeholder='Número de Inserções' type='number' value={numeroInsercoes} onChange={(e: any) => setNumeroInsercoes(e.target.value)} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <Label>Valor</Label>
+                                        <Input placeholder='Valor' type='text' value={valor} ref={valorRef} onChange={(e: any) => setValor(e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <Label>Dia do Vencimento</Label>
+                                        <Input placeholder='Vencimento' type='number' value={diaVencimento} onChange={(e: any) => setDiaVencimento(e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <Label>Forma de Pagamento</Label>
+                                        <Select onValueChange={(value) => setFormaPagamento(value)} value={formaPagamento}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder='Forma de Pagamento'></SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {formasPagamento.map((formas) => (
+                                                        <SelectItem key={formas.id} value={formas.formaPagamento}>{formas.formaPagamento}</SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <Label>Comissão</Label>
+                                        <Input placeholder="Comissão" type="number" value={comissao} onChange={(e: any) => setComissao(e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <Label>Status</Label>
+                                        <Select onValueChange={(value) => setStatus(value)} value={status}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder='Status'></SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    <SelectItem value="ativo">Ativo</SelectItem>
+                                                    <SelectItem value="inativo">Inativo</SelectItem>
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label>Corretor</Label>
+                                    <Select onValueChange={(value) => setCorretor(value)} value={corretor}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder='Status'></SelectValue>
+                                            <SelectValue placeholder='Corretor'></SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
-                                                <SelectItem value="ativo">Ativo</SelectItem>
-                                                <SelectItem value="inativo">Inativo</SelectItem>
+                                                {corretores.map((corretor) => (
+                                                    <SelectItem key={corretor.id} value={corretor.nome}>{corretor.nome}</SelectItem>
+                                                ))}
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <Select onValueChange={(value) => setCorretor(value)} value={corretor}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder='Corretor'></SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {corretores.map((corretor) => (
-                                                <SelectItem key={corretor.id} value={corretor.nome}>{corretor.nome}</SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                <Input placeholder='Descritivo' type='text' value={descritivo} onChange={(e: any) => setDescritivo(e.target.value)} />
+                                <div>
+                                    <Label>Descritivo</Label>
+                                    <Input placeholder='Descritivo' type='text' value={descritivo} onChange={(e: any) => setDescritivo(e.target.value)} />
+                                </div>
                             </form>
                             <DialogFooter className="mt-2">
                                 <DialogClose asChild>

@@ -7,6 +7,7 @@ import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '.
 import { useState, useEffect, useRef } from 'react';
 import IMask from 'imask';
 import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 
 export default function Clientes() {
 
@@ -54,12 +55,12 @@ export default function Clientes() {
                     });
                 }
                 if (cepRef.current) {
-                    IMask(cepRef.current, { 
+                    IMask(cepRef.current, {
                         mask: '00000-000',
                     });
                 }
             };
-            const timer = setTimeout(applyMasks, 100);
+            const timer = setTimeout(applyMasks, 10);
             return () => clearTimeout(timer);
         }
     }, [isDialogOpen]);
@@ -193,36 +194,76 @@ export default function Clientes() {
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <Button className="my-3 " onClick={handleAdd}>Novo Cliente</Button>
                         <DialogContent>
-                            <DialogHeader><span className="text-2xl font-bold">Adicionar cliente</span></DialogHeader>
-                            <form className="flex flex-col gap-2">
-                                <Input placeholder="Razão Social" type="text" className='col-span-2' value={razaoSocial} onChange={(e: any) => setRazaoSocial(e.target.value)} />
-                                <Input placeholder="Nome Fantasia" type="text" className='col-span-2' value={nomeFantasia} onChange={(e: any) => setNomeFantasia(e.target.value)} />
-                                <div className="grid grid-cols-5 gap-2">
-                                    <Input placeholder="Contato" type="text" className='col-span-3' value={contato} onChange={(e: any) => setContato(e.target.value)} />
-                                    <Input placeholder="Inscrição Municipal" type="text" className='col-span-2' value={inscMunicipal} onChange={(e: any) => setInscMunicipal(e.target.value)} />
+                            <DialogHeader>Clientes</DialogHeader>
+                            <form className="flex flex-col">
+                                <div>
+                                    <Label >Razão Social</Label>
+                                    <Input placeholder="Razão Social" type="text" className='col-span-2' value={razaoSocial} onChange={(e: any) => setRazaoSocial(e.target.value)} />
                                 </div>
-                                <div className="grid grid-cols-4 gap-2">
-                                    <Input placeholder="CPF" ref={cpfRef} type="text" className='col-span-2' value={cpf} onChange={(e: any) => setCpf(e.target.value)} />
-                                    <Input placeholder="CNPJ" ref={cnpjRef} type="text" className='col-span-2' value={cnpj} onChange={(e: any) => setCnpj(e.target.value)} />
+                                <div>
+                                    <Label>Nome Fantasia</Label>
+                                    <Input placeholder="Nome Fantasia" type="text" className='col-span-2' value={nomeFantasia} onChange={(e: any) => setNomeFantasia(e.target.value)} />
                                 </div>
                                 <div className="grid grid-cols-5 gap-2">
-                                    <Input placeholder="Endereço" type="text" className='col-span-4' value={endereco} onChange={(e: any) => setEndereco(e.target.value)} />
-                                    <Input placeholder="Nº" type="number" className='col-span-1' value={numero} onChange={(e: any) => setNumero(e.target.value)} />
+                                    <div className='col-span-3'>
+                                        <Label>Contato</Label>
+                                        <Input placeholder="Contato" type="text" className='col-span-3' value={contato} onChange={(e: any) => setContato(e.target.value)} />
+                                    </div>
+                                    <div className='col-span-2'>
+                                        <Label>Inscrição Municipal</Label>
+                                        <Input placeholder="Inscrição Municipal" type="text" className='col-span-2' value={inscMunicipal} onChange={(e: any) => setInscMunicipal(e.target.value)} />
+                                    </div>
                                 </div>
                                 <div className="grid grid-cols-4 gap-2">
-                                    <Input placeholder="Bairro" type="text" className='col-span-2' value={bairro} onChange={(e: any) => setBairro(e.target.value)} />
-                                    <Input placeholder="Cidade" type="text" className='col-span-2' value={cidade} onChange={(e: any) => setCidade(e.target.value)} />
+                                    <div className='col-span-2'>
+                                        <Label>CPF</Label>
+                                        <Input placeholder="CPF" ref={cpfRef} type="text" className='col-span-2' value={cpf} onChange={(e: any) => setCpf(e.target.value)} />
+                                    </div>
+                                    <div className='col-span-2'>
+                                        <Label>CNPJ</Label>
+                                        <Input placeholder="CNPJ" ref={cnpjRef} type="text" className='col-span-2' value={cnpj} onChange={(e: any) => setCnpj(e.target.value)} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-5 gap-2">
+                                    <div className='col-span-4'>
+                                        <Label>Endereço</Label>
+                                        <Input placeholder="Endereço" type="text" className='col-span-4' value={endereco} onChange={(e: any) => setEndereco(e.target.value)} />
+                                    </div>
+                                    <div className='col-span-1'>
+                                        <Label>Nº</Label>
+                                        <Input placeholder="Nº" type="number" className='col-span-1' value={numero} onChange={(e: any) => setNumero(e.target.value)} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-4 gap-2">
+                                    <div className='col-span-2'>
+                                        <Label>Bairro</Label>
+                                        <Input placeholder="Bairro" type="text" className='col-span-2' value={bairro} onChange={(e: any) => setBairro(e.target.value)} />
+                                    </div>
+                                    <div className='col-span-2'>
+                                        <Label>Cidade</Label>
+                                        <Input placeholder="Cidade" type="text" className='col-span-2' value={cidade} onChange={(e: any) => setCidade(e.target.value)} />
+                                    </div>
                                 </div>
                                 <div className="grid grid-cols-10 gap-2">
-                                    <Input placeholder="Estado" type="text" className='col-span-2 text-center' maxLength={2} value={estado} onChange={(e: any) => setEstado(e.target.value)} />
-                                    <Input placeholder="CEP" ref={cepRef} type="text" className='col-span-3' value={cep} onChange={(e: any) => setCep(e.target.value)} />
-                                    <Input placeholder="Fone" type="number" className='col-span-5' value={fone} onChange={(e: any) => setFone(e.target.value)} />
+                                    <div className='col-span-2'>
+                                        <Label>Estado</Label>
+                                        <Input placeholder="Estado" type="text" className='col-span-2 text-center' maxLength={2} value={estado} onChange={(e: any) => setEstado(e.target.value)} />
+                                    </div>
+                                    <div className='col-span-3'>
+                                        <Label>CEP</Label>
+                                        <Input placeholder="CEP" ref={cepRef} type="text" className='col-span-3' value={cep} onChange={(e: any) => setCep(e.target.value)} />
+                                    </div>
+                                    <div className='col-span-5'>
+                                        <Label>Fone</Label>
+                                        <Input placeholder="Fone" type="number" className='col-span-5' value={fone} onChange={(e: any) => setFone(e.target.value)} />
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <Label>Atividade</Label>
                                     <Input placeholder="Atividade" type="text" className='col-span-2' value={atividade} onChange={(e: any) => setAtividade(e.target.value)} />
-
                                 </div>
-                                <div className="grid grid-cols-6 gap-2">
+                                <div>
+                                    <Label>Email</Label>
                                     <Input placeholder="Email" type="email" className='col-span-6' value={email} onChange={(e: any) => setEmail(e.target.value)} />
                                 </div>
                                 <DialogFooter className="mt-2">
