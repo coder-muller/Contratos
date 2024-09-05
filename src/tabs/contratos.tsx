@@ -23,6 +23,7 @@ export default function Contratos() {
     const [corretores, setCorretores] = useState<any[]>([]);
     const [programas, setProgramas] = useState<any[]>([]);
     const [formasPagamento, setFormasPagamento] = useState<any[]>([]);
+    const [statusSearch, setStatusSearch] = useState<any>('todos');
 
     const [cliente, setCliente] = useState('');
     const [programa, setPrograma] = useState('');
@@ -42,7 +43,13 @@ export default function Contratos() {
         loadProgramas();
         loadCorretores();
         loadFormasPagamento();
+        setStatus('todos');
     }, [])
+
+    useEffect(() => {
+        loadContratos();
+    }, [statusSearch]);
+    
 
     useEffect(() => {
         if (isDialogOpen) {
@@ -76,8 +83,17 @@ export default function Contratos() {
     const loadContratos = async () => {
         try {
             const response = await sendGet('/contratos/04390988077');
-            if (response) {
-                const contratosCompletos = await Promise.all(response.map(async (contrato: any) => {
+            console.log(response);
+            console.log(statusSearch);
+            let filteredContratos: any[] = [];
+            if ( statusSearch !== 'todos') {
+                filteredContratos = response.filter((contrato: any) => contrato.status == statusSearch);
+            } else {
+                filteredContratos = response;
+            }
+            console.log(filteredContratos);
+            if (filteredContratos) {
+                const contratosCompletos = await Promise.all(filteredContratos.map(async (contrato: any) => {
                     const valorNumerico = parseFloat(contrato.valor);
                     const valorString = valorNumerico.toFixed(2).replace('.', ',');
 
@@ -298,12 +314,13 @@ export default function Contratos() {
             <CardContent>
                 <div className='flex items-center justify-between w-11/12 m-auto'>
                     <div className='w-1/6'>
-                        <Select onValueChange={(value) => setStatus(value)}>
+                        <Select onValueChange={(value) => setStatusSearch(value)} value={statusSearch}>
                             <SelectTrigger>
                                 <SelectValue placeholder='Status'></SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
+                                    <SelectItem value="todos" >Todos</SelectItem>
                                     <SelectItem value="ativo" >Ativo</SelectItem>
                                     <SelectItem value="inativo">Inativo</SelectItem>
                                 </SelectGroup>

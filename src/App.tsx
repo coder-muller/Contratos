@@ -1,10 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { ThemeProvider } from "./components/ui/theme-provider"
 
 import Contratos from './tabs/contratos';
 import Clientes from './tabs/clientes';
 import Ajustes from "./tabs/ajustes";
+import Faturas from "./tabs/faturas";
 
 export default function App() {
   return (
@@ -25,15 +25,8 @@ export default function App() {
           <TabsContent value="contratos" className="w-screen px-10 py-3">
             <Contratos />
           </TabsContent>
-          <TabsContent value="faturas">
-            <Card>
-              <CardHeader>
-                <CardTitle>Resultados</CardTitle>
-                <CardDescription>Aqui você pode analisar as parcelas dos clientes.</CardDescription>
-              </CardHeader>
-              <CardContent>
-              </CardContent>
-            </Card>
+          <TabsContent value="faturas" className="w-screen px-10 py-3">
+            <Faturas />
           </TabsContent>
           <TabsContent value="ajustes">
             <Ajustes />
