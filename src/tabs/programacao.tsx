@@ -7,6 +7,7 @@ import { Input } from "../components/ui/input";
 import { Trash, Pencil } from 'lucide-react';
 import IMask from 'imask';
 import { Label } from "../components/ui/label";
+import { CustomAlertDialog, CustomConfirmDialog } from "../components/alert";
 
 export default function Programacao() {
 
@@ -25,6 +26,10 @@ export default function Programacao() {
     const [horaFim, setHoraFim] = useState<string>('');
     const [estilo, setEstilo] = useState<string>('');
     const [valorPatrocinio, setValorPatrocinio] = useState<string>('');
+
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [alertConfirmMessage, setAlertConfirmMessage] = useState<string | null>(null);
+
 
     useEffect(() => {
         loadProgramas();
@@ -66,7 +71,33 @@ export default function Programacao() {
     const loadProgramas = async () => {
         const response = await sendGet('/programacao/04390988077');
         if (response) {
-            setProgramas(response);
+
+            const programasCompletos = await Promise.all(response.map(async (programa: any) => {
+                const valorNumerico = parseFloat(programa.valorPatrocinio);
+                const valorString = valorNumerico.toFixed(2).replace('.', ',');
+                const maskedValue = IMask.createMask({
+                    mask: 'R$ num',
+                    blocks: {
+                        num: {
+                            mask: Number,
+                            thousandsSeparator: '.',
+                            radix: ',',
+                            scale: 2,
+                            signed: false,
+                            normalizeZeros: true,
+                            padFractionalZeros: true,
+                        }
+                    }
+                });
+                maskedValue.resolve(valorString);
+                const valorFinal = maskedValue.value;
+                return {
+                    ...programa,
+                    valorPatrocinio: valorFinal,
+                };
+            }));
+
+            setProgramas(programasCompletos);
         } else {
             console.log(response)
             console.log('Erro ao buscar programas')
@@ -90,16 +121,14 @@ export default function Programacao() {
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm('Tem certeza que deseja excluir este programa?')) {
-            const response = await sendDelete(`/programacao/${id}`, {
-                usuario: "Guilherme"
-            });
-            if (response) {
-                loadProgramas();
-            } else {
-                console.log(response.data)
-                console.log('Erro ao excluir programa')
-            }
+        const response = await sendDelete(`/programacao/${id}`, {
+            usuario: "Guilherme"
+        });
+        if (response) {
+            loadProgramas();
+        } else {
+            console.log('Erro ao excluir programa')
+            console.log(response.data)
         }
     }
 
@@ -139,8 +168,11 @@ export default function Programacao() {
                 setIsDialogOpen(false);
                 resetForm();
             } catch (error) {
-                alert('Erro ao processar a solicitação');
+                setAlertMessage("Erro ao processar a solicitação")
             }
+        }else{
+            setAlertMessage("O campo Programa é obrigatório");
+            return;
         }
     }
 
@@ -164,15 +196,18 @@ export default function Programacao() {
                     </TableHeader>
                     <TableBody>
                         {programas.map((programa: any) => (
-                        <TableRow key={programa.id}>
-                            <TableCell align="left">{programa.programa}</TableCell>
-                            <TableCell align="left">{programa.diasApresentacao}</TableCell>
-                            <TableCell align="left">{programa.horaInicio} às {programa.horaFim}</TableCell>
-                            <TableCell align="left">{programa.apresentador}</TableCell>
-                            <TableCell align="left">R$ {programa.valorPatrocinio}</TableCell>
-                            <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => handleDelete(programa.id)} /></TableCell>
-                            <TableCell><Pencil className="w-4 h-4 cursor-pointer" onClick={() => handleEdit(programa)} /></TableCell>
-                        </TableRow>
+                            <TableRow key={programa.id}>
+                                <TableCell align="left">{programa.programa}</TableCell>
+                                <TableCell align="left">{programa.diasApresentacao}</TableCell>
+                                <TableCell align="left">{programa.horaInicio} às {programa.horaFim}</TableCell>
+                                <TableCell align="left">{programa.apresentador}</TableCell>
+                                <TableCell align="left">{programa.valorPatrocinio}</TableCell>
+                                <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => {
+                                    setAlertConfirmMessage("Tem certeza que deseja excluir este programa?")
+                                    setSelectedPrograma(programa);
+                                    }} /></TableCell>
+                                <TableCell><Pencil className="w-4 h-4 cursor-pointer" onClick={() => handleEdit(programa)} /></TableCell>
+                            </TableRow>
                         ))}
                     </TableBody>
                 </Table>
@@ -224,7 +259,8 @@ export default function Programacao() {
                         </form>
                     </DialogContent>
                 </Dialog>
-
+                {alertMessage && <CustomAlertDialog message={alertMessage} onClose={() => setAlertMessage(null)} />}
+                {alertConfirmMessage && <CustomConfirmDialog message={alertConfirmMessage} onConfirm={() => handleDelete(selectedPrograma.id)} onCancel={() => setAlertConfirmMessage(null)} />}
             </div>
         </div>
     )

@@ -83,8 +83,6 @@ export default function Contratos() {
     const loadContratos = async () => {
         try {
             const response = await sendGet('/contratos/04390988077');
-            console.log(response);
-            console.log(statusSearch);
             let filteredContratos: any[] = [];
             if ( statusSearch !== 'todos') {
                 filteredContratos = response.filter((contrato: any) => contrato.status == statusSearch);

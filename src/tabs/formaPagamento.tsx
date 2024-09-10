@@ -6,11 +6,15 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { Input } from "../components/ui/input";
 import { Trash, Pencil } from 'lucide-react';
 import { Label } from "../components/ui/label";
+import { CustomAlertDialog, CustomConfirmDialog } from "../components/alert";
 
-export default function FormaPagamento() { 
+export default function FormaPagamento() {
 
     const [metodos, setMetodos] = useState<any[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [alertConfirmMessage, setAlertConfirmMessage] = useState<string | null>(null);
 
     const [formaPagamento, setFormaPagamento] = useState<string>('');
     const [selectedFormaPagamento, setSelectedFormaPagamento] = useState<any>(null);
@@ -50,16 +54,14 @@ export default function FormaPagamento() {
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm('Tem certeza que deseja excluir este metodo de pagamento?')) {
-            const response = await sendDelete(`/formaPagamento/${id}`, {
-                usuario: "Guilherme"
-            });
-            if (response) {
-                fetchMetodos();
-            } else {
-                console.log(response.data)
-                console.log('Erro ao excluir metodo de pagamento')
-            }
+        const response = await sendDelete(`/formaPagamento/${id}`, {
+            usuario: "Guilherme"
+        });
+        if (response) {
+            fetchMetodos();
+        } else {
+            console.log(response.data)
+            console.log('Erro ao excluir metodo de pagamento')
         }
     }
 
@@ -87,10 +89,10 @@ export default function FormaPagamento() {
                 setIsDialogOpen(false);
                 resetForm();
             } catch (error) {
-                alert('Erro ao processar a solicitação');
+                setAlertMessage("Erro ao processar a solicitação")
             }
         } else {
-            alert('O campo Forma de Pagamento é obrigatório');
+            setAlertMessage("O campo Forma de Pagamento é obrigatório");
         }
     }
 
@@ -114,7 +116,10 @@ export default function FormaPagamento() {
                             <TableRow key={metodo.id}>
                                 <TableCell align="left">{metodo.id}</TableCell>
                                 <TableCell align="left">{metodo.formaPagamento}</TableCell>
-                                <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => handleDelete(metodo.id)} /></TableCell>
+                                <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => {
+                                    setAlertConfirmMessage("Tem certeza que deseja excluir este metodo de pagamento?")
+                                    setSelectedFormaPagamento(metodo);
+                                }} /></TableCell>
                                 <TableCell><Pencil className="w-4 h-4 cursor-pointer" onClick={() => handleEdit(metodo)} /></TableCell>
                             </TableRow>
                         ))}
@@ -140,7 +145,8 @@ export default function FormaPagamento() {
                         </form>
                     </DialogContent>
                 </Dialog>
-
+                {alertMessage && <CustomAlertDialog message={alertMessage} onClose={() => setAlertMessage(null)} />}
+                {alertConfirmMessage && <CustomConfirmDialog message={alertConfirmMessage} onConfirm={() => handleDelete(selectedFormaPagamento.id)} onCancel={() => setAlertConfirmMessage(null)} />}
             </div>
         </div>
     )

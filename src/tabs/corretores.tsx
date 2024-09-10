@@ -95,55 +95,32 @@ export default function Corretores() {
         e.preventDefault();
         if (nome) {
             if (dataAdmissao) {
-                if (isValidDate(dataAdmissao)) {
-                    const body = {
-                        chave: '04390988077',
-                        nome,
-                        email,
-                        endereco,
-                        fone,
-                        dataAdmissao: parseDate(dataAdmissao)
-                    };
-                    console.log(body);
-                    try {
-                        if (selectedCorretor) {
-                            await sendPut(`/corretores/${selectedCorretor.id}`, body);
-                            setSelectedCorretor(null);
-                        } else {
-                            await sendPost('/corretores', body);
-                        }
-                        fetchCorretores();
-                        setIsDialogOpen(false);
-                        resetForm();
-                    } catch (error) {
-                        alert('Erro ao processar a solicitação');
-                    }
-                } else {
+                if (!isValidDate(dataAdmissao)) {
                     alert('A data de admissão não é valida');
+                    return;
                 }
-            } else {
-                const body = {
-                    chave: '04390988077',
-                    nome,
-                    email,
-                    endereco,
-                    fone,
-                    dataAdmissao: parseDate(dataAdmissao)
-                };
-                console.log(body);
-                try {
-                    if (selectedCorretor) {
-                        await sendPut(`/corretores/${selectedCorretor.id}`, body);
-                        setSelectedCorretor(null);
-                    } else {
-                        await sendPost('/corretores', body);
-                    }
-                    fetchCorretores();
-                    setIsDialogOpen(false);
-                    resetForm();
-                } catch (error) {
-                    alert('Erro ao processar a solicitação');
+            }
+            const body = {
+                chave: '04390988077',
+                nome,
+                email,
+                endereco,
+                fone,
+                dataAdmissao: dataAdmissao ? parseDate(dataAdmissao) : '',
+            };
+            console.log(body);
+            try {
+                if (selectedCorretor) {
+                    await sendPut(`/corretores/${selectedCorretor.id}`, body);
+                    setSelectedCorretor(null);
+                } else {
+                    await sendPost('/corretores', body);
                 }
+                fetchCorretores();
+                setIsDialogOpen(false);
+                resetForm();
+            } catch (error) {
+                alert('Erro ao processar a solicitação');
             }
         } else {
             alert('O campo Nome é obrigatório');
