@@ -17,7 +17,7 @@ export function CustomAlertDialog({ message, onClose }: { message: string; onClo
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Alerta</AlertDialogTitle>
+          <AlertDialogTitle>CGM Sistemnas</AlertDialogTitle>
           <AlertDialogDescription>{message}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -34,7 +34,7 @@ export function CustomConfirmDialog({ message, onConfirm, onCancel }: { message:
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Alerta</AlertDialogTitle>
+          <AlertDialogTitle>CGM Sistemas</AlertDialogTitle>
           <AlertDialogDescription>{message}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

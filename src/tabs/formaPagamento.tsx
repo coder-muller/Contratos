@@ -118,7 +118,7 @@ export default function FormaPagamento() {
                                 <TableCell align="left">{metodo.id}</TableCell>
                                 <TableCell align="left">{metodo.formaPagamento}</TableCell>
                                 <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => {
-                                    setAlertConfirmMessage("Tem certeza que deseja excluir este metodo de pagamento?")
+                                    setAlertConfirmMessage("Tem certeza que deseja excluir este método de pagamento?")
                                     setSelectedFormaPagamento(metodo);
                                 }} /></TableCell>
                                 <TableCell><Pencil className="w-4 h-4 cursor-pointer" onClick={() => handleEdit(metodo)} /></TableCell>
@@ -130,7 +130,7 @@ export default function FormaPagamento() {
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Nova Forma de Pagamento</DialogTitle>
+                            <DialogTitle>Forma de Pagamento</DialogTitle>
                         </DialogHeader>
                         <form action="" className="flex flex-col gap-3">
                             <div>

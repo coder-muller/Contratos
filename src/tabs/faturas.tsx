@@ -56,6 +56,18 @@ export default function Faturas() {
         return () => clearTimeout(timer);
     }, []);
 
+    useEffect(() => {
+        if (situacaoFaturaSearch ) {
+            handleSearch();
+        }
+    }, [situacaoFaturaSearch]);
+
+    useEffect(() => {
+        if (tipoDataSearch) {
+            handleSearch();
+        }
+    }, [tipoDataSearch]);
+
     const loadFaturas = async () => {
         const response = await sendGet('/faturamento/04390988077');
         if (response) {
@@ -181,7 +193,7 @@ export default function Faturas() {
                 }
                 const body = {
                     chave: '04390988077',
-                    id_cliente: contrato.id_cliente,
+                    id_cliente: contrato.id_cliente,    
                     id_contrato: contrato.id,
                     id_programa: contrato.id_programa,
                     dataEmissao: new Date(),

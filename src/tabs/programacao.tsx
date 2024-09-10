@@ -216,7 +216,7 @@ export default function Programacao() {
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Novo Programa</DialogTitle>
+                            <DialogTitle>Programa</DialogTitle>
                         </DialogHeader>
                         <form action="" className="flex flex-col">
                             <div>

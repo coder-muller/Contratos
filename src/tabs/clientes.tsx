@@ -2,12 +2,13 @@ import { sendGet, sendPost, sendPut, sendDelete } from '../functions';
 import { Trash, Pencil, Search } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
-import { Dialog, DialogHeader, DialogContent, DialogFooter } from '../components/ui/dialog';
+import { Dialog, DialogHeader, DialogContent, DialogFooter, DialogClose } from '../components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '../components/ui/table';
 import { useState, useEffect, useRef } from 'react';
 import IMask from 'imask';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { CustomAlertDialog, CustomConfirmDialog } from '../components/alert';
 
 export default function Clientes() {
 
@@ -36,6 +37,9 @@ export default function Clientes() {
 
     const [inputFilter, setInputFilter] = useState<string>('');
     const [selectedCliente, setSelectedCliente] = useState<any>(null);
+
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [alertConfirmMessage, setAlertConfirmMessage] = useState<string | null>(null);
 
     useEffect(() => {
         fetchClientes();
@@ -101,14 +105,13 @@ export default function Clientes() {
     };
 
     const handleDelete = async (id: number) => {
-        if (confirm('Tem certeza que deseja excluir o cliente?')) {
-            try {
-                await sendDelete(`/clientes/${id}`, { usuario: 'Guilherme' });
-                fetchClientes();
-            } catch (error) {
-                alert('Erro ao excluir cliente');
-            }
-        };
+        try {
+            await sendDelete(`/clientes/${id}`, { usuario: 'Guilherme' });
+            fetchClientes();
+        } catch (error) {
+            setAlertMessage("Erro ao deletar o cliente!");
+        }
+        setAlertConfirmMessage(null);
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -143,10 +146,10 @@ export default function Clientes() {
                 setIsDialogOpen(false);
                 resetForm();
             } catch (error) {
-                alert('Erro ao processar a solicitação');
+                setAlertMessage("Erro ao processar a solicitação");
             }
         } else {
-            alert('Os campos Razão Social e Nome Fantasia são obrigatórios');
+            setAlertMessage("Os campos Razão Social e Nome Fantasia são obrigatórios");
         }
     }
 
@@ -267,7 +270,9 @@ export default function Clientes() {
                                     <Input placeholder="Email" type="email" className='col-span-6' value={email} onChange={(e: any) => setEmail(e.target.value)} />
                                 </div>
                                 <DialogFooter className="mt-2">
-                                    <Button variant={"outline"}>Cancelar</Button>
+                                    <DialogClose asChild>
+                                        <Button variant={"outline"}>Cancelar</Button>
+                                    </DialogClose>
                                     <Button onClick={handleSubmit}>Salvar</Button>
                                 </DialogFooter>
                             </form>
@@ -295,12 +300,17 @@ export default function Clientes() {
                                     <TableCell>{cliente.cnpj}</TableCell>
                                     <TableCell>{cliente.email}</TableCell>
                                     <TableCell>{cliente.fone}</TableCell>
-                                    <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => handleDelete(cliente.id)} /></TableCell>
+                                    <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => {
+                                        setAlertConfirmMessage("Tem certeza que deseja excluir este cliente?")
+                                        setSelectedCliente(cliente);
+                                    }} /></TableCell>
                                     <TableCell><Pencil className="w-4 h-4 cursor-pointer" onClick={() => handleEdit(cliente)} /></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
+                    {alertMessage && <CustomAlertDialog message={alertMessage} onClose={() => setAlertMessage(null)} />}
+                    {alertConfirmMessage && <CustomConfirmDialog message={alertConfirmMessage} onConfirm={() => handleDelete(selectedCliente.id)} onCancel={() => setAlertConfirmMessage(null)} />}
                 </div>
             </CardContent>
         </Card>

@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogClose } from "../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogClose, DialogTitle } from "../components/ui/dialog";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/ui/table";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from "../components/ui/select";
 import { Input } from "../components/ui/input";
-import { Trash, Pencil } from "lucide-react";
+import { Trash, Pencil, ScrollText } from "lucide-react";
 import { convertIsoToDate, sendGet, sendDelete, sendPost, sendPut, parseDate, getDataFromId, floatParaInput, converterParaNumero, isValidDate, getIdFromData } from "../functions";
 import IMask from 'imask';
 import { Label } from "../components/ui/label";
@@ -15,9 +15,13 @@ export default function Contratos() {
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedContrato, setSelectedContrato] = useState<any>(null);
+    const [isDialogConfigOpen, setIsDialogConfigOpen] = useState(false);
 
     const valorRef = useRef(null);
     const dataEmissaoRef = useRef(null);
+    const diaVencimentoRef = useRef(null);
+    const comissaoRef = useRef(null);
+    const anoRef = useRef(null);
 
     const [clientes, setClientes] = useState<any[]>([]);
     const [contratos, setContratos] = useState<any[]>([]);
@@ -38,6 +42,9 @@ export default function Contratos() {
     const [descritivo, setDescritivo] = useState('');
     const [diaVencimento, setDiaVencimento] = useState('');
 
+    const [mes, setMes] = useState((Number(new Date().getMonth()) + 2).toString());
+    const [ano, setAno] = useState(Number(new Date().getFullYear()));
+
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
     const [alertConfirmMessage, setAlertConfirmMessage] = useState<string | null>(null);
 
@@ -53,6 +60,17 @@ export default function Contratos() {
     useEffect(() => {
         loadContratos();
     }, [statusSearch]);
+
+    useEffect(() => {
+        if (isDialogConfigOpen) {
+            const applyMasks = () => {
+
+            }
+            const timer = setTimeout(applyMasks, 100);
+            return () => clearTimeout(timer);
+        }
+
+    }, [isDialogConfigOpen]);
 
 
     useEffect(() => {
@@ -76,6 +94,11 @@ export default function Contratos() {
                 if (dataEmissaoRef.current) {
                     IMask(dataEmissaoRef.current, {
                         mask: '00/00/0000',
+                    });
+                }
+                if (diaVencimentoRef.current) {
+                    IMask(diaVencimentoRef.current, {
+                        mask: '00',
                     });
                 }
             }
@@ -195,6 +218,7 @@ export default function Contratos() {
         setSelectedContrato(null);
         resetForm();
         setIsDialogOpen(true);
+        setDataEmissao(convertIsoToDate((new Date()).toDateString()));
     }
 
     const resetForm = () => {
@@ -237,74 +261,78 @@ export default function Contratos() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (cliente && programa) {
+
             if (dataEmissao) {
-                if (isValidDate(dataEmissao)) {
-                    const body = {
-                        chave: '04390988077',
-                        id_cliente: await getIdFromData(cliente, 'nomeFantasia', '/clientes/04390988077'),
-                        id_programa: await getIdFromData(programa, 'programa', '/programacao/04390988077'),
-                        dataEmissao: dataEmissao ? parseDate(dataEmissao) : '',
-                        numInsercoes: numeroInsercoes,
-                        valor: converterParaNumero(valor),
-                        id_formaPagamento: await getIdFromData(formaPagamento, 'formaPagamento', '/formaPagamento/04390988077'),
-                        diaVencimento,
-                        comissao,
-                        status,
-                        id_corretor: await getIdFromData(corretor, 'nome', '/corretores/04390988077'),
-                        descritivo
-                    };
-                    console.log(body);
-                    try {
-                        if (selectedContrato) {
-                            await sendPut(`/contratos/${selectedContrato.id}`, body);
-                            setSelectedContrato(null);
-                        } else {
-                            await sendPost('/contratos', body);
-                        }
-                        loadContratos();
-                        setIsDialogOpen(false);
-                        resetForm();
-                    }
-                    catch (error) {
-                        setAlertMessage("Erro ao processar a solicitação");
-                    }
-                } else {
+                if (!isValidDate(dataEmissao)) {
                     setAlertMessage("A data de emissão não é valida");
+                    return;
+                }
+            }
+            if (diaVencimento) {
+                if (parseInt(diaVencimento) > 28) {
+                    setAlertMessage("A data de vencimento deves ser menor que 28!");
+                    return;
                 }
             } else {
-                const body = {
-                    chave: '04390988077',
-                    id_cliente: await getIdFromData(cliente, 'nomeFantasia', '/clientes/04390988077'),
-                    id_programa: await getIdFromData(programa, 'programa', '/programacao/04390988077'),
-                    dataEmissao: dataEmissao ? parseDate(dataEmissao) : '',
-                    numInsercoes: numeroInsercoes,
-                    diaVencimento,
-                    valor: converterParaNumero(valor),
-                    id_formaPagamento: await getIdFromData(formaPagamento, 'formaPagamento', '/formaPagamento/04390988077'),
-                    comissao,
-                    status,
-                    id_corretor: await getIdFromData(corretor, 'nome', '/corretores/04390988077'),
-                    descritivo
-                };
-                try {
-                    if (selectedContrato) {
-                        await sendPut(`/contratos/${selectedContrato.id}`, body);
-                        setSelectedContrato(null);
-                    } else {
-                        await sendPost('/contratos', body);
-                    }
-                    loadContratos();
-                    setIsDialogOpen(false);
-                    resetForm();
+                setAlertMessage("Preencha o dia de vencimento!");
+                return;
+            }
+            const body = {
+                chave: '04390988077',
+                id_cliente: await getIdFromData(cliente, 'nomeFantasia', '/clientes/04390988077'),
+                id_programa: await getIdFromData(programa, 'programa', '/programacao/04390988077'),
+                dataEmissao: dataEmissao ? parseDate(dataEmissao) : '',
+                numInsercoes: numeroInsercoes,
+                valor: converterParaNumero(valor),
+                id_formaPagamento: await getIdFromData(formaPagamento, 'formaPagamento', '/formaPagamento/04390988077'),
+                diaVencimento,
+                comissao,
+                status,
+                id_corretor: await getIdFromData(corretor, 'nome', '/corretores/04390988077'),
+                descritivo
+            };
+            console.log(body);
+            try {
+                if (selectedContrato) {
+                    await sendPut(`/contratos/${selectedContrato.id}`, body);
+                    setSelectedContrato(null);
+                } else {
+                    await sendPost('/contratos', body);
                 }
-                catch (error) {
-                    setAlertMessage("Erro ao processar a solicitação");
-                }
+                loadContratos();
+                setIsDialogOpen(false);
+                resetForm();
+            }
+            catch (error) {
+                setAlertMessage("Erro ao processar a solicitação");
             }
         } else {
             setAlertMessage("Preencha os campos obrigatórios (Cliente e Programa)!")
         }
     }
+
+    const gerarFaturaIndividual = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        if (!ano || ano < new Date().getFullYear()) {
+            setAlertMessage("Ano inválido!");
+            return;
+        }
+        setIsDialogConfigOpen(false);
+        const dataVencimentoContrato = new Date(ano, (Number(mes) - 1), Number(selectedContrato.diaVencimento));
+        const body = {
+            chave: '04390988077',
+            id_cliente: selectedContrato.id_cliente,    
+            id_contrato: selectedContrato.id,
+            id_programa: selectedContrato.id_programa,
+            dataEmissao: new Date(),
+            dataVencimento: dataVencimentoContrato,
+            valor: selectedContrato.valor,
+            id_formaPagamento: selectedContrato.id_formaPagamento,
+        };
+        await sendPost('/faturamento', body);
+        setAlertMessage("Fatura gerada com sucesso!");
+    }
+
 
     return (
         <Card>
@@ -331,7 +359,7 @@ export default function Contratos() {
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <Button className='my-3' onClick={handleAdd}>Novo Contrato</Button>
                         <DialogContent>
-                            <DialogHeader><span className="text-2xl font-bold">Adicionar contrato</span></DialogHeader>
+                            <DialogHeader><span className="text-2xl font-bold">Contrato</span></DialogHeader>
                             <form className='flex flex-col'>
                                 <div>
                                     <Label>Cliente</Label>
@@ -380,7 +408,7 @@ export default function Contratos() {
                                     </div>
                                     <div>
                                         <Label>Dia do Vencimento</Label>
-                                        <Input placeholder='Vencimento' type='number' value={diaVencimento} onChange={(e: any) => setDiaVencimento(e.target.value)} />
+                                        <Input placeholder='Vencimento' type='number' ref={diaVencimentoRef} value={diaVencimento} onChange={(e: any) => setDiaVencimento(e.target.value)} />
                                     </div>
                                     <div>
                                         <Label>Forma de Pagamento</Label>
@@ -400,8 +428,8 @@ export default function Contratos() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <Label>Comissão</Label>
-                                        <Input placeholder="Comissão" type="number" value={comissao} onChange={(e: any) => setComissao(e.target.value)} />
+                                        <Label>Comissão (%)</Label>
+                                        <Input placeholder="Comissão" type="number" ref={comissaoRef} value={comissao} onChange={(e: any) => setComissao(e.target.value)} />
                                     </div>
                                     <div>
                                         <Label>Status</Label>
@@ -455,9 +483,11 @@ export default function Contratos() {
                                 <TableHead align="left">Cliente</TableHead>
                                 <TableHead align="left">Emissão</TableHead>
                                 <TableHead align="left">Programa</TableHead>
+                                <TableHead align="left">Dia Vencimento</TableHead>
                                 <TableHead align="left">Valor</TableHead>
                                 <TableHead align="left">Corretor</TableHead>
                                 <TableHead align="left">Comissão</TableHead>
+                                <TableHead></TableHead>
                                 <TableHead></TableHead>
                                 <TableHead></TableHead>
                             </TableRow>
@@ -468,9 +498,14 @@ export default function Contratos() {
                                     <TableCell>{contrato.clienteNome}</TableCell>
                                     <TableCell>{convertIsoToDate(contrato.dataEmissao)}</TableCell>
                                     <TableCell>{contrato.programaNome}</TableCell>
+                                    <TableCell>{contrato.diaVencimento}</TableCell>
                                     <TableCell>{contrato.valorFinal}</TableCell>
                                     <TableCell>{contrato.corretorNome}</TableCell>
                                     <TableCell>{(contrato.comissaoFinal)}%</TableCell>
+                                    <TableCell><ScrollText className="w-4 h-4 cursor-pointer" onClick={() => {
+                                        setSelectedContrato(contrato);
+                                        setIsDialogConfigOpen(true)
+                                    }} /></TableCell>
                                     <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => {
                                         setAlertConfirmMessage("Tem certeza que deseja excluir este contrato?")
                                         setSelectedContrato(contrato);
@@ -480,6 +515,51 @@ export default function Contratos() {
                             ))}
                         </TableBody>
                     </Table>
+                    <Dialog open={isDialogConfigOpen} onOpenChange={setIsDialogConfigOpen}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Informações para gerar fatura</DialogTitle>
+                            </DialogHeader>
+                            <form action="" className="flex flex-col">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <Label>Mes</Label>
+                                        <Select onValueChange={(value) => setMes(value)} value={mes}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder='Mês'></SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    <SelectItem value="1" >Janeiro</SelectItem>
+                                                    <SelectItem value="2">Fevereiro</SelectItem>
+                                                    <SelectItem value="3">Março</SelectItem>
+                                                    <SelectItem value="4">Abril</SelectItem>
+                                                    <SelectItem value="5">Maio</SelectItem>
+                                                    <SelectItem value="6">Junho</SelectItem>
+                                                    <SelectItem value="7">Julho</SelectItem>
+                                                    <SelectItem value="8">Agosto</SelectItem>
+                                                    <SelectItem value="9">Setembro</SelectItem>
+                                                    <SelectItem value="10">Outubro</SelectItem>
+                                                    <SelectItem value="11">Novembro</SelectItem>
+                                                    <SelectItem value="12">Dezembro</SelectItem>
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label>Ano</Label>
+                                        <Input placeholder="Ano" type="number" ref={anoRef} value={ano} onChange={(e: any) => setAno(e.target.value)} />
+                                    </div>
+                                </div>
+                                <DialogFooter className="mt-4">
+                                    <DialogClose asChild>
+                                        <Button variant={"outline"}>Cancelar</Button>
+                                    </DialogClose>
+                                    <Button type="button" onClick={ gerarFaturaIndividual }>Gerar Fatura</Button>
+                                </DialogFooter>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
                     {alertMessage && <CustomAlertDialog message={alertMessage} onClose={() => setAlertMessage(null)} />}
                     {alertConfirmMessage && <CustomConfirmDialog message={alertConfirmMessage} onConfirm={() => handleDelete(selectedContrato.id)} onCancel={() => setAlertConfirmMessage(null)} />}
                 </div>

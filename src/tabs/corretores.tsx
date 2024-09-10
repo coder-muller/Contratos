@@ -168,7 +168,7 @@ export default function Corretores() {
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Novo Corretor</DialogTitle>
+                            <DialogTitle>Corretor</DialogTitle>
                         </DialogHeader>
                         <form action="" className="flex flex-col">
                             <div>
