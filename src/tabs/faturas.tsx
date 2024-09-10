@@ -7,7 +7,7 @@ import { Label } from "../components/ui/label";
 import { useState, useEffect, useRef } from "react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from "../components/ui/select";
 import { sendGet, sendPost, getDataFromId, convertIsoToDate, sendDelete, parseDate, isValidDate, sendPut, getIdFromData } from "../functions";
-import { Search, Trash, Pencil, CheckCircle2 } from 'lucide-react';
+import { Search, Trash, Pencil, CircleCheckBig } from 'lucide-react';
 import IMask from 'imask';
 
 export default function Faturas() {
@@ -20,6 +20,7 @@ export default function Faturas() {
     const [dataFimSearch, setDataFimSearch] = useState('');
     const [formasPagamento, setFormasPagamento] = useState<any[]>([]);
 
+    const [situacaoFaturaSearch, setSituacaoFaturaSearch] = useState('todos');
     const [tipoDataSearch, setTipoDataSearch] = useState('vencimento');
     const [selectedFatura, setSelectedFatura] = useState<any>(null);
     const [dataPagamento, setDataPagamento] = useState('');
@@ -104,40 +105,44 @@ export default function Faturas() {
     const handleSearch = () => {
         const dataInicio = dataInicioSearchRef.current?.value;
         const dataFim = dataFimSearchRef.current?.value;
+    
         if (!dataInicio || !dataFim) {
             loadFaturas();
             return;
         }
-
         if (dataInicio && dataFim && isValidDate(dataInicio) && isValidDate(dataFim)) {
             const inicioDate = parseDate(dataInicio);
             const fimDate = parseDate(dataFim);
             const tipoData = tipoDataSearch;
-
+            const situacao = situacaoFaturaSearch;
+            let faturasFiltradas = faturas;
+            if (situacao === 'pendentes') {
+                faturasFiltradas = faturasFiltradas.filter(fatura => fatura.dataPagamento === null);
+            } else if (situacao === 'pagas') {
+                faturasFiltradas = faturasFiltradas.filter(fatura => fatura.dataPagamento !== null);
+            }
             if (tipoData === 'vencimento') {
-                const faturasFiltradas = faturas.filter(fatura => {
+                faturasFiltradas = faturasFiltradas.filter(fatura => {
                     const dataVencimento = new Date(fatura.dataVencimento);
                     return dataVencimento >= inicioDate && dataVencimento <= fimDate;
                 });
-                setFaturasFiltradas(faturasFiltradas);
             } else if (tipoData === 'pagamento') {
-                const faturasFiltradas = faturas.filter(fatura => {
-                    const dataPagamento = new Date(fatura.dataPagamento);
-                    return dataPagamento >= inicioDate && dataPagamento <= fimDate;
+                faturasFiltradas = faturasFiltradas.filter(fatura => {
+                    const dataPagamento = fatura.dataPagamento ? new Date(fatura.dataPagamento) : null;
+                    return dataPagamento && dataPagamento >= inicioDate && dataPagamento <= fimDate;
                 });
-                setFaturasFiltradas(faturasFiltradas);
             } else if (tipoData === 'emissao') {
-                const faturasFiltradas = faturas.filter(fatura => {
+                faturasFiltradas = faturasFiltradas.filter(fatura => {
                     const dataEmissao = new Date(fatura.dataEmissao);
                     return dataEmissao >= inicioDate && dataEmissao <= fimDate;
                 });
-                setFaturasFiltradas(faturasFiltradas);
             }
+            setFaturasFiltradas(faturasFiltradas);
         } else {
-            ;
             alert("Datas inválidas!");
         }
     };
+    
 
     const handleConfigs = async () => {
         setIsDialogOpen(true);
@@ -261,7 +266,19 @@ export default function Faturas() {
                         <div>
                             <Label>Buscar entre datas de Vencimento</Label>
                             <div className="flex items-center justify-start gap-2">
-                            <Select onValueChange={(value) => setTipoDataSearch(value)} value={tipoDataSearch}>
+                            <Select onValueChange={(value) => setSituacaoFaturaSearch(value)} value={situacaoFaturaSearch}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder='Situação'></SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectItem value="todos" >Todos</SelectItem>
+                                            <SelectItem value="pendentes">Pendentes</SelectItem>
+                                            <SelectItem value="pagas">Pagas</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                                <Select onValueChange={(value) => setTipoDataSearch(value)} value={tipoDataSearch}>
                                     <SelectTrigger>
                                         <SelectValue placeholder='Tipo de Data'></SelectValue>
                                     </SelectTrigger>
@@ -307,7 +324,7 @@ export default function Faturas() {
                                         {/* Verifica se dataPagamento é nulo para exibir o ícone de pagamento */}
                                         {!fatura.dataPagamento ? (
                                             <TableCell>
-                                                <CheckCircle2 className="w-4 h-4 cursor-pointer" onClick={() => hendleOpenPayment(fatura)} />
+                                                <CircleCheckBig className="w-4 h-4 cursor-pointer" onClick={() => hendleOpenPayment(fatura)} />
                                             </TableCell>
                                         ) : <TableCell></TableCell>}
                                         <TableCell>
