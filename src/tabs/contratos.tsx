@@ -9,6 +9,7 @@ import { Trash, Pencil } from "lucide-react";
 import { convertIsoToDate, sendGet, sendDelete, sendPost, sendPut, parseDate, getDataFromId, floatParaInput, converterParaNumero, isValidDate, getIdFromData } from "../functions";
 import IMask from 'imask';
 import { Label } from "../components/ui/label";
+import { CustomAlertDialog, CustomConfirmDialog } from "../components/alert";
 
 export default function Contratos() {
 
@@ -37,6 +38,9 @@ export default function Contratos() {
     const [descritivo, setDescritivo] = useState('');
     const [diaVencimento, setDiaVencimento] = useState('');
 
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [alertConfirmMessage, setAlertConfirmMessage] = useState<string | null>(null);
+
     useEffect(() => {
         loadContratos();
         loadClientes();
@@ -49,7 +53,7 @@ export default function Contratos() {
     useEffect(() => {
         loadContratos();
     }, [statusSearch]);
-    
+
 
     useEffect(() => {
         if (isDialogOpen) {
@@ -84,7 +88,7 @@ export default function Contratos() {
         try {
             const response = await sendGet('/contratos/04390988077');
             let filteredContratos: any[] = [];
-            if ( statusSearch !== 'todos') {
+            if (statusSearch !== 'todos') {
                 filteredContratos = response.filter((contrato: any) => contrato.status == statusSearch);
             } else {
                 filteredContratos = response;
@@ -131,11 +135,11 @@ export default function Contratos() {
                 }));
                 setContratos(contratosCompletos);
             } else {
-                alert("Erro ao carregar os contratos!");
+                setAlertMessage("Erro ao carregar os contratos!");
             }
         } catch (error) {
             console.error("Error loading contratos:", error);
-            alert("Ocorreu um erro ao carregar os contratos!");
+            setAlertMessage("Ocorreu um erro ao carregar os contratos!");
         }
     };
 
@@ -144,7 +148,7 @@ export default function Contratos() {
         if (response) {
             setClientes(response);
         } else {
-            alert("Erro ao carregar os clientes!");
+            setAlertMessage("Erro ao carregar os clientes!");
         }
     }
 
@@ -153,7 +157,7 @@ export default function Contratos() {
         if (response) {
             setProgramas(response);
         } else {
-            alert("Erro ao carregar os programas!");
+            setAlertMessage("Erro ao carregar os programas!");
         }
     }
 
@@ -162,7 +166,7 @@ export default function Contratos() {
         if (response) {
             setCorretores(response);
         } else {
-            alert("Erro ao carregar os corretores!");
+            setAlertMessage("Erro ao carregar os corretores!");
         }
     }
 
@@ -171,21 +175,20 @@ export default function Contratos() {
         if (response) {
             setFormasPagamento(response);
         } else {
-            alert("Erro ao carregar os formas de pagamento!");
+            setAlertMessage("Erro ao carregar os formas de pagamento!");
         }
     }
 
     const handleDelete = async (id: string) => {
-        if (confirm('Tem certeza que deseja excluir este contrato?')) {
-            const body = { usuario: 'Guilherme' };
-            const response = await sendDelete(`/contratos/${id}`, body);
-            if (response) {
-                loadContratos();
-            } else {
-                alert("Erro ao deletar o contrato!");
-                console.log(response);
-            }
+        const body = { usuario: 'Guilherme' };
+        const response = await sendDelete(`/contratos/${id}`, body);
+        if (response) {
+            loadContratos();
+        } else {
+            setAlertMessage("Erro ao deletar o contrato!");
+            console.log(response);
         }
+        setAlertConfirmMessage(null);
     }
 
     const handleAdd = () => {
@@ -263,10 +266,10 @@ export default function Contratos() {
                         resetForm();
                     }
                     catch (error) {
-                        alert('Erro ao processar a solicitação');
+                        setAlertMessage("Erro ao processar a solicitação");
                     }
                 } else {
-                    alert('A data de emissão não é valida');
+                    setAlertMessage("A data de emissão não é valida");
                 }
             } else {
                 const body = {
@@ -295,11 +298,11 @@ export default function Contratos() {
                     resetForm();
                 }
                 catch (error) {
-                    alert('Erro ao processar a solicitação');
+                    setAlertMessage("Erro ao processar a solicitação");
                 }
             }
         } else {
-            alert("Preencha os campos obrigatórios (Cliente e Programa)!")
+            setAlertMessage("Preencha os campos obrigatórios (Cliente e Programa)!")
         }
     }
 
@@ -468,12 +471,17 @@ export default function Contratos() {
                                     <TableCell>{contrato.valorFinal}</TableCell>
                                     <TableCell>{contrato.corretorNome}</TableCell>
                                     <TableCell>{(contrato.comissaoFinal)}%</TableCell>
-                                    <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => handleDelete(contrato.id)} /></TableCell>
+                                    <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => {
+                                        setAlertConfirmMessage("Tem certeza que deseja excluir este contrato?")
+                                        setSelectedContrato(contrato);
+                                    }} /></TableCell>
                                     <TableCell><Pencil className="w-4 h-4 cursor-pointer" onClick={() => handleEdit(contrato)} /></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
+                    {alertMessage && <CustomAlertDialog message={alertMessage} onClose={() => setAlertMessage(null)} />}
+                    {alertConfirmMessage && <CustomConfirmDialog message={alertConfirmMessage} onConfirm={() => handleDelete(selectedContrato.id)} onCancel={() => setAlertConfirmMessage(null)} />}
                 </div>
             </CardContent>
         </Card>
