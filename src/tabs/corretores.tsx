@@ -7,6 +7,7 @@ import { Input } from "../components/ui/input";
 import { Trash, Pencil } from 'lucide-react';
 import IMask from 'imask';
 import { Label } from "../components/ui/label";
+import { CustomAlertDialog, CustomConfirmDialog } from "../components/alert";
 
 
 export default function Corretores() {
@@ -22,6 +23,9 @@ export default function Corretores() {
     const [endereco, setEndereco] = useState("");
     const [fone, setFone] = useState("");
     const [dataAdmissao, setDataAdmissao] = useState("");
+
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [alertConfirmMessage, setAlertConfirmMessage] = useState<string | null>(null);
 
 
     useEffect(() => {
@@ -78,16 +82,14 @@ export default function Corretores() {
     }
 
     const handleDelete = async (id: string) => {
-        if (confirm('Tem certeza que deseja excluir este corretor?')) {
-            const response = await sendDelete(`/corretores/${id}`, {
-                usuario: "Guilherme"
-            });
-            if (response) {
-                fetchCorretores();
-            } else {
-                console.log(response.data)
-                console.log('Erro ao excluir corretor')
-            }
+        const response = await sendDelete(`/corretores/${id}`, {
+            usuario: "Guilherme"
+        });
+        if (response) {
+            fetchCorretores();
+        } else {
+            console.log('Erro ao excluir corretor')
+            console.log(response.data)
         }
     }
 
@@ -96,7 +98,7 @@ export default function Corretores() {
         if (nome) {
             if (dataAdmissao) {
                 if (!isValidDate(dataAdmissao)) {
-                    alert('A data de admissão não é valida');
+                    setAlertMessage("A data de admissão não é valida");
                     return;
                 }
             }
@@ -120,10 +122,10 @@ export default function Corretores() {
                 setIsDialogOpen(false);
                 resetForm();
             } catch (error) {
-                alert('Erro ao processar a solicitação');
+                setAlertMessage("Erro ao processar a solicitação")
             }
         } else {
-            alert('O campo Nome é obrigatório');
+            setAlertMessage("O campo Nome é obrigatório");
         }
     }
 
@@ -152,7 +154,10 @@ export default function Corretores() {
                                 <TableCell align="left">{corretor.email}</TableCell>
                                 <TableCell align="left">{corretor.fone}</TableCell>
                                 <TableCell align="left">{convertIsoToDate(corretor.dataAdmissao)}</TableCell>
-                                <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => handleDelete(corretor.id)} /></TableCell>
+                                <TableCell><Trash className="w-4 h-4 cursor-pointer" onClick={() => {
+                                    setAlertConfirmMessage("Tem certeza que deseja excluir este corretor?")
+                                    setSelectedCorretor(corretor);
+                                }} /></TableCell>
                                 <TableCell><Pencil className="w-4 h-4 cursor-pointer" onClick={() => handleEdit(corretor)} /></TableCell>
                             </TableRow>
                         ))}
@@ -196,7 +201,8 @@ export default function Corretores() {
                         </form>
                     </DialogContent>
                 </Dialog>
-
+                {alertMessage && <CustomAlertDialog message={alertMessage} onClose={() => setAlertMessage(null)} />}
+                {alertConfirmMessage && <CustomConfirmDialog message={alertConfirmMessage} onConfirm={() => handleDelete(selectedCorretor.id)} onCancel={() => setAlertConfirmMessage(null)} />}
             </div>
         </div>
 
