@@ -91,6 +91,7 @@ export default function Corretores() {
             console.log('Erro ao excluir corretor')
             console.log(response.data)
         }
+        setAlertConfirmMessage(null);
     }
 
     const handleSubmit = async (e: React.FormEvent) => {

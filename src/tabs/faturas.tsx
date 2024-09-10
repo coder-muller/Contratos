@@ -9,6 +9,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGr
 import { sendGet, sendPost, getDataFromId, convertIsoToDate, sendDelete, parseDate, isValidDate, sendPut, getIdFromData } from "../functions";
 import { Search, Trash, Pencil, CircleCheckBig } from 'lucide-react';
 import IMask from 'imask';
+import { CustomAlertDialog, CustomConfirmDialog } from "../components/alert";
 
 export default function Faturas() {
 
@@ -31,6 +32,9 @@ export default function Faturas() {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [mes, setMes] = useState((Number(new Date().getMonth()) + 2).toString());
     const [ano, setAno] = useState(Number(new Date().getFullYear()));
+
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [alertConfirmMessage, setAlertConfirmMessage] = useState<string | null>(null);
 
     useEffect(() => {
         loadFaturas();
@@ -89,7 +93,7 @@ export default function Faturas() {
             setFaturas(faturasCompletas);
             setFaturasFiltradas(faturasCompletas);
         } else {
-            alert("Erro ao carregar as faturas!");
+            setAlertMessage("Erro ao carregar as faturas!");
         }
     }
 
@@ -98,14 +102,14 @@ export default function Faturas() {
         if (response) {
             setFormasPagamento(response);
         } else {
-            alert("Erro ao carregar os formas de pagamento!");
+            setAlertMessage("Erro ao carregar os formas de pagamento!");
         }
     }
 
     const handleSearch = () => {
         const dataInicio = dataInicioSearchRef.current?.value;
         const dataFim = dataFimSearchRef.current?.value;
-    
+
         if (!dataInicio || !dataFim) {
             loadFaturas();
             return;
@@ -139,10 +143,10 @@ export default function Faturas() {
             }
             setFaturasFiltradas(faturasFiltradas);
         } else {
-            alert("Datas inválidas!");
+            setAlertMessage("Datas inválidas!");
         }
     };
-    
+
 
     const handleConfigs = async () => {
         setIsDialogOpen(true);
@@ -153,7 +157,7 @@ export default function Faturas() {
     const hendleGenerate = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         if (!ano || ano < new Date().getFullYear()) {
-            alert("Ano inválido!");
+            setAlertMessage("Ano inválido!");
             return;
         }
         setIsDialogOpen(false);
@@ -161,7 +165,7 @@ export default function Faturas() {
         if (contratos) {
             const activeContratos = contratos.filter((contrato: any) => contrato.status === 'ativo');
             if (activeContratos.length === 0) {
-                alert("Não há contratos ativos para gerar faturas!");
+                setAlertMessage("Não há contratos ativos para gerar faturas!");
                 return;
             }
             for (const contrato of activeContratos) {
@@ -187,24 +191,23 @@ export default function Faturas() {
                 };
                 await sendPost('/faturamento', body);
             }
-            alert("Faturas geradas com sucesso!");
+            setAlertMessage("Faturas geradas com sucesso!");
             await handleSearch();
         } else {
-            alert("Erro ao carregar os contratos!");
+            setAlertMessage("Erro ao carregar os contratos!");
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm('Tem certeza que deseja excluir esta fatura?')) {
-            const body = { usuario: 'Guilherme' };
-            const response = await sendDelete(`/faturamento/${id}`, body);
-            if (response) {
-                await loadFaturas();
-            } else {
-                alert("Erro ao deletar a fatura!");
-                console.log(response);
-            }
+        const body = { usuario: 'Guilherme' };
+        const response = await sendDelete(`/faturamento/${id}`, body);
+        if (response) {
+            await loadFaturas();
+        } else {
+            setAlertMessage("Erro ao deletar a fatura!");
+            console.log(response);
         }
+        setAlertConfirmMessage(null);
     }
 
     // Payment Logic ////////////////////////////////////////////////////////////////////////////////////////
@@ -233,7 +236,7 @@ export default function Faturas() {
     const handlePaymanent = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         if (!(isValidDate(dataPagamento))) {
-            alert("Data de pagamento inválida!");
+            setAlertMessage("Data de pagamento inválida!");
             return;
         }
         const body = {
@@ -247,7 +250,7 @@ export default function Faturas() {
                 await handleSearch();
                 setIsPaymentDialogOpen(false)
             } else {
-                alert("Erro ao processar a solicitação");
+                setAlertMessage("Erro ao processar a solicitação");
             };
         } catch (error) {
             console.log(error);
@@ -266,7 +269,7 @@ export default function Faturas() {
                         <div>
                             <Label>Buscar entre datas de Vencimento</Label>
                             <div className="flex items-center justify-start gap-2">
-                            <Select onValueChange={(value) => setSituacaoFaturaSearch(value)} value={situacaoFaturaSearch}>
+                                <Select onValueChange={(value) => setSituacaoFaturaSearch(value)} value={situacaoFaturaSearch}>
                                     <SelectTrigger>
                                         <SelectValue placeholder='Situação'></SelectValue>
                                     </SelectTrigger>
@@ -328,7 +331,10 @@ export default function Faturas() {
                                             </TableCell>
                                         ) : <TableCell></TableCell>}
                                         <TableCell>
-                                            <Trash className="w-4 h-4 cursor-pointer" onClick={() => handleDelete(fatura.id)} />
+                                            <Trash className="w-4 h-4 cursor-pointer" onClick={() => {
+                                                setAlertConfirmMessage("Tem certeza que deseja excluir esta fatura?")
+                                                setSelectedFatura(fatura);
+                                            }} />
                                         </TableCell>
                                         <TableCell>
                                             <Pencil className="w-4 h-4 cursor-pointer" />
@@ -421,6 +427,8 @@ export default function Faturas() {
                     </form>
                 </DialogContent>
             </Dialog>
+            {alertMessage && <CustomAlertDialog message={alertMessage} onClose={() => setAlertMessage(null)} />}
+            {alertConfirmMessage && <CustomConfirmDialog message={alertConfirmMessage} onConfirm={() => handleDelete(selectedFatura.id)} onCancel={() => setAlertConfirmMessage(null)} />}
         </div>
     )
 }

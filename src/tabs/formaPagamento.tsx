@@ -63,6 +63,7 @@ export default function FormaPagamento() {
             console.log(response.data)
             console.log('Erro ao excluir metodo de pagamento')
         }
+        setAlertConfirmMessage(null);
     }
 
     const handleEdit = (metodo: any) => {

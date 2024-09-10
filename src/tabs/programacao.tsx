@@ -130,6 +130,7 @@ export default function Programacao() {
             console.log('Erro ao excluir programa')
             console.log(response.data)
         }
+        setAlertConfirmMessage(null);
     }
 
     const handleEdit = (programa: any) => {
