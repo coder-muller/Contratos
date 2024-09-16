@@ -1,5 +1,11 @@
 const BASE_URL = 'http://localhost:4567';
 
+interface DataItem {
+    id: string;
+    [key: string]: any; // Isso permite outros campos dinâmicos
+  }
+  
+
 export async function sendGet(rota: string): Promise<any> {
     try {
         const response = await fetch(`${BASE_URL}${rota}`, {
@@ -149,22 +155,25 @@ export function getNextMonthDate(day: number): Date {
 }
 
 export async function getDataFromId(id: string, route: string, fieldName: string): Promise<string> {
-    const response = await sendGet(route);
-    const data = response.find(item => item.id === id);
+    const response: DataItem[] = await sendGet(route); // Use o tipo DataItem[]
+    const data = response.find((item: DataItem) => item.id === id);
     
     if (data && fieldName in data) {
         return String(data[fieldName]);
     }
     return 'erro'; 
 }
-export async function getIdFromData(data: any, fieldName: string, route: string ) : Promise<string> {
-    const response = await sendGet(route);
-    const id = response.find(item => item[fieldName] === data);
+
+export async function getIdFromData(data: any, fieldName: string, route: string): Promise<string> {
+    const response: DataItem[] = await sendGet(route); // Use o tipo DataItem[]
+    const id = response.find((item: DataItem) => item[fieldName] === data);
+    
     if (id) {
         return String(id.id);
     }   
     return 'erro'; 
 }
+
 
 
 
