@@ -7,7 +7,7 @@ import { Label } from "../components/ui/label";
 import { useState, useEffect, useRef } from "react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from "../components/ui/select";
 import { sendGet, sendPost, getDataFromId, convertIsoToDate, sendDelete, parseDate, isValidDate, sendPut, getIdFromData } from "../functions";
-import { Search, Trash, Pencil, CircleCheckBig } from 'lucide-react';
+import { Search, Trash, CircleCheckBig } from 'lucide-react';
 import IMask from 'imask';
 import { CustomAlertDialog, CustomConfirmDialog } from "../components/alert";
 
@@ -17,8 +17,8 @@ export default function Faturas() {
     const dataFimSearchRef = useRef<HTMLInputElement>(null);
     const dataPagamentoRef = useRef<HTMLInputElement>(null);
 
-    const [dataInicioSearch, setDataInicioSearch] = useState('');
-    const [dataFimSearch, setDataFimSearch] = useState('');
+    const [dataInicioSearch, setDataInicioSearch] = useState(new Date( new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('pt-BR'));
+    const [dataFimSearch, setDataFimSearch] = useState(new Date().toLocaleDateString('pt-BR'));
     const [formasPagamento, setFormasPagamento] = useState<any[]>([]);
 
     const [situacaoFaturaSearch, setSituacaoFaturaSearch] = useState('todos');
@@ -57,7 +57,7 @@ export default function Faturas() {
     }, []);
 
     useEffect(() => {
-        if (situacaoFaturaSearch ) {
+        if (situacaoFaturaSearch) {
             handleSearch();
         }
     }, [situacaoFaturaSearch]);
@@ -67,6 +67,13 @@ export default function Faturas() {
             handleSearch();
         }
     }, [tipoDataSearch]);
+
+    useEffect(() => {
+        handleSearch();
+    }, [situacaoFaturaSearch, tipoDataSearch]);
+    useEffect(() => {
+        handleSearch();
+    }, []);
 
     const loadFaturas = async () => {
         const response = await sendGet('/faturamento/04390988077');
@@ -118,17 +125,23 @@ export default function Faturas() {
         }
     }
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
         const dataInicio = dataInicioSearchRef.current?.value;
         const dataFim = dataFimSearchRef.current?.value;
 
         if (!dataInicio || !dataFim) {
-            loadFaturas();
+            await loadFaturas();
             return;
         }
         if (dataInicio && dataFim && isValidDate(dataInicio) && isValidDate(dataFim)) {
             const inicioDate = parseDate(dataInicio);
             const fimDate = parseDate(dataFim);
+
+            if (!inicioDate || !fimDate) {
+                setAlertMessage("Datas inválidas!");
+                return;
+            }
+
             const tipoData = tipoDataSearch;
             const situacao = situacaoFaturaSearch;
             let faturasFiltradas = faturas;
@@ -193,7 +206,7 @@ export default function Faturas() {
                 }
                 const body = {
                     chave: '04390988077',
-                    id_cliente: contrato.id_cliente,    
+                    id_cliente: contrato.id_cliente,
                     id_contrato: contrato.id,
                     id_programa: contrato.id_programa,
                     dataEmissao: new Date(),
@@ -269,6 +282,64 @@ export default function Faturas() {
         }
     }
 
+    // Print Report Logic ////////////////////////////////////////////////////////////////////////////////////////
+    const handlePrintReport = () => {
+        let somaValor = 0;
+        const maskedValue = IMask.createMask({
+            mask: 'R$ num',
+            blocks: {
+                num: {
+                    mask: Number,
+                    thousandsSeparator: '.',
+                    radix: ',',
+                    scale: 2,
+                    signed: false,
+                    normalizeZeros: true,
+                    padFractionalZeros: true,
+                }
+            }
+        });
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        if (printWindow) {
+            printWindow.document.write('<html><head><title>Relatório de Faturas</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { font-family: Arial, sans-serif; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid black; padding: 2px; text-align: left; }
+                th { background-color: #f2f2f2; }
+            `);
+            printWindow.document.write('</style></head><body>');
+            printWindow.document.write('<h2>Relatório de Faturas</h2>');
+            printWindow.document.write('<table>');
+            printWindow.document.write('<tr><th>Cliente</th><th>Vencimento</th><th>Pagamento</th><th>Valor</th><th>Forma de Pagamento</th></tr>');
+            faturasFiltradas.forEach((fatura) => {
+                printWindow.document.write(`
+                    <tr>
+                        <td>${fatura.clienteNome}</td>
+                        <td>${fatura.dataVencimento ? new Date(fatura.dataVencimento).toLocaleDateString('pt-BR') : ''}</td>
+                        <td>${fatura.dataPagamento ? new Date(fatura.dataPagamento).toLocaleDateString('pt-BR'  ) : 'Pendente'}</td>
+                        <td>${fatura.valorFinal}</td>
+                        <td>${fatura.formaPagamentoDescricao}</td>
+                    </tr>
+                `);
+                somaValor += parseFloat(fatura.valor);
+            });
+            maskedValue.resolve(somaValor.toFixed(2).replace('.', ','));
+            const valorFinalTotal = maskedValue.value;
+            printWindow.document.write(`<tr><td>Total</td><td></td><td></td><td>${valorFinalTotal}</td><td></td></tr>`);
+            printWindow.document.write('</table>');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        } else {
+            setAlertMessage("Erro ao gerar o relatório de impressão!");
+        }
+    };
+
+
     return (
         <div>
             <Card>
@@ -310,7 +381,10 @@ export default function Faturas() {
                                 <Button variant={"secondary"} onClick={handleSearch}><Search size={20} /></Button>
                             </div>
                         </div>
-                        <Button onClick={handleConfigs}>Gerar Faturas</Button>
+                        <div className="flex items-center justify-end gap-2">
+                            <Button variant={"secondary"} onClick={handlePrintReport}>Imprimir Relatório</Button>
+                            <Button onClick={handleConfigs}>Gerar Faturas</Button>
+                        </div>
                     </div>
                     <div className="border rounded-lg shadow-md w-11/12 m-auto max-h-[60vh] overflow-y-auto">
                         <Table className="w-full">
@@ -336,7 +410,6 @@ export default function Faturas() {
                                         <TableCell>{convertIsoToDate(fatura.dataVencimento)}</TableCell>
                                         <TableCell>{fatura.dataPagamento ? convertIsoToDate(fatura.dataPagamento) : 'Pendente'}</TableCell>
                                         <TableCell>{fatura.valorFinal}</TableCell>
-                                        {/* Verifica se dataPagamento é nulo para exibir o ícone de pagamento */}
                                         {!fatura.dataPagamento ? (
                                             <TableCell>
                                                 <CircleCheckBig className="w-4 h-4 cursor-pointer" onClick={() => hendleOpenPayment(fatura)} />
@@ -347,9 +420,6 @@ export default function Faturas() {
                                                 setAlertConfirmMessage("Tem certeza que deseja excluir esta fatura?")
                                                 setSelectedFatura(fatura);
                                             }} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Pencil className="w-4 h-4 cursor-pointer" />
                                         </TableCell>
                                     </TableRow>
                                 ))}
