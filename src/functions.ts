@@ -1,4 +1,4 @@
-const BASE_URL = 'https://contratosserver.onrender.com';
+const BASE_URL = 'http://localhost:4567';
 
 interface DataItem {
     id: string;
