@@ -7,9 +7,10 @@ import { Label } from "../components/ui/label";
 import { useState, useEffect, useRef } from "react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from "../components/ui/select";
 import { sendGet, sendPost, getDataFromId, convertIsoToDate, sendDelete, parseDate, isValidDate, sendPut, getIdFromData } from "../functions";
-import { Search, Trash, CircleCheckBig } from 'lucide-react';
+import { Search, Trash, CircleCheckBig, Printer } from 'lucide-react';
 import IMask from 'imask';
 import { CustomAlertDialog, CustomConfirmDialog } from "../components/alert";
+import CulturaLogo from '../assets/culturaLogo.png';
 
 export default function Faturas() {
 
@@ -17,7 +18,7 @@ export default function Faturas() {
     const dataFimSearchRef = useRef<HTMLInputElement>(null);
     const dataPagamentoRef = useRef<HTMLInputElement>(null);
 
-    const [dataInicioSearch, setDataInicioSearch] = useState(new Date( new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('pt-BR'));
+    const [dataInicioSearch, setDataInicioSearch] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString('pt-BR'));
     const [dataFimSearch, setDataFimSearch] = useState(new Date().toLocaleDateString('pt-BR'));
     const [formasPagamento, setFormasPagamento] = useState<any[]>([]);
 
@@ -27,7 +28,6 @@ export default function Faturas() {
     const [dataPagamento, setDataPagamento] = useState('');
     const [metodoPagamento, setMetodoPagamento] = useState('');
     const [faturas, setFaturas] = useState<any[]>([]);
-    const [faturasFiltradas, setFaturasFiltradas] = useState<any[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [mes, setMes] = useState((Number(new Date().getMonth()) + 2).toString());
@@ -37,8 +37,7 @@ export default function Faturas() {
     const [alertConfirmMessage, setAlertConfirmMessage] = useState<string | null>(null);
 
     useEffect(() => {
-        loadFaturas();
-        handleSearch();
+        showFaturas();
         loadFormasPagamento();
         const applyMasks = () => {
             if (dataInicioSearchRef.current) {
@@ -58,25 +57,41 @@ export default function Faturas() {
 
     useEffect(() => {
         if (situacaoFaturaSearch) {
-            handleSearch();
+            showFaturas();
         }
     }, [situacaoFaturaSearch]);
 
     useEffect(() => {
         if (tipoDataSearch) {
-            handleSearch();
+            showFaturas();
         }
     }, [tipoDataSearch]);
 
     useEffect(() => {
-        handleSearch();
+        showFaturas();
     }, [situacaoFaturaSearch, tipoDataSearch]);
     useEffect(() => {
-        handleSearch();
+        showFaturas();
     }, []);
 
-    const loadFaturas = async () => {
+    const loadFormasPagamento = async () => {
+        const response = await sendGet('/formaPagamento/04390988077');
+        if (response) {
+            setFormasPagamento(response);
+        } else {
+            setAlertMessage("Erro ao carregar os formas de pagamento!");
+        }
+    }
+
+    const showFaturas = async () => {
+
+        const dataInicio = dataInicioSearchRef.current?.value;
+        const dataFim = dataFimSearchRef.current?.value;
+
+        let faturas = [];
+
         const response = await sendGet('/faturamento/04390988077');
+
         if (response) {
             const faturasCompletas = await Promise.all(response.map(async (fatura: any) => {
                 const valorNumerico = parseFloat(fatura.valor);
@@ -109,68 +124,54 @@ export default function Faturas() {
                     formaPagamentoDescricao,
                 };
             }));
-            setFaturas(faturasCompletas);
-            setFaturasFiltradas(faturasCompletas);
+
+            if (dataInicio && dataFim && isValidDate(dataInicio) && isValidDate(dataFim)) {
+                const inicioDate = parseDate(dataInicio);
+                const fimDate = parseDate(dataFim);
+                if (!inicioDate || !fimDate) {
+                    setAlertMessage("Datas inválidas!");
+                    return;
+                }
+
+                const tipoData = tipoDataSearch;
+                const situacao = situacaoFaturaSearch;
+
+                faturas = faturasCompletas
+
+
+                if (situacao === 'pendentes') {
+                    faturas = faturasCompletas.filter(fatura => fatura.dataPagamento === null);
+                } else if (situacao === 'pagas') {
+                    faturas = faturasCompletas.filter(fatura => fatura.dataPagamento !== null);
+                }
+
+                if (tipoData === 'vencimento') {
+                    faturas = faturas.filter(fatura => {
+                        const dataVencimento = new Date(fatura.dataVencimento);
+                        return dataVencimento >= inicioDate && dataVencimento <= fimDate;
+                    });
+                } else if (tipoData === 'pagamento') {
+                    faturas = faturas.filter(fatura => {
+                        const dataPagamento = fatura.dataPagamento ? new Date(fatura.dataPagamento) : null;
+                        return dataPagamento && dataPagamento >= inicioDate && dataPagamento <= fimDate;
+                    });
+                } else if (tipoData === 'emissao') {
+                    faturas = faturas.filter(fatura => {
+                        const dataEmissao = new Date(fatura.dataEmissao);
+                        return dataEmissao >= inicioDate && dataEmissao <= fimDate;
+                    });
+                }
+
+                setFaturas(faturas);
+
+            } else {
+                setAlertMessage("Datas inválidas!");
+                return;
+            }
         } else {
             setAlertMessage("Erro ao carregar as faturas!");
         }
     }
-
-    const loadFormasPagamento = async () => {
-        const response = await sendGet('/formaPagamento/04390988077');
-        if (response) {
-            setFormasPagamento(response);
-        } else {
-            setAlertMessage("Erro ao carregar os formas de pagamento!");
-        }
-    }
-
-    const handleSearch = async () => {
-        const dataInicio = dataInicioSearchRef.current?.value;
-        const dataFim = dataFimSearchRef.current?.value;
-
-        if (!dataInicio || !dataFim) {
-            await loadFaturas();
-            return;
-        }
-        if (dataInicio && dataFim && isValidDate(dataInicio) && isValidDate(dataFim)) {
-            const inicioDate = parseDate(dataInicio);
-            const fimDate = parseDate(dataFim);
-
-            if (!inicioDate || !fimDate) {
-                setAlertMessage("Datas inválidas!");
-                return;
-            }
-
-            const tipoData = tipoDataSearch;
-            const situacao = situacaoFaturaSearch;
-            let faturasFiltradas = faturas;
-            if (situacao === 'pendentes') {
-                faturasFiltradas = faturasFiltradas.filter(fatura => fatura.dataPagamento === null);
-            } else if (situacao === 'pagas') {
-                faturasFiltradas = faturasFiltradas.filter(fatura => fatura.dataPagamento !== null);
-            }
-            if (tipoData === 'vencimento') {
-                faturasFiltradas = faturasFiltradas.filter(fatura => {
-                    const dataVencimento = new Date(fatura.dataVencimento);
-                    return dataVencimento >= inicioDate && dataVencimento <= fimDate;
-                });
-            } else if (tipoData === 'pagamento') {
-                faturasFiltradas = faturasFiltradas.filter(fatura => {
-                    const dataPagamento = fatura.dataPagamento ? new Date(fatura.dataPagamento) : null;
-                    return dataPagamento && dataPagamento >= inicioDate && dataPagamento <= fimDate;
-                });
-            } else if (tipoData === 'emissao') {
-                faturasFiltradas = faturasFiltradas.filter(fatura => {
-                    const dataEmissao = new Date(fatura.dataEmissao);
-                    return dataEmissao >= inicioDate && dataEmissao <= fimDate;
-                });
-            }
-            setFaturasFiltradas(faturasFiltradas);
-        } else {
-            setAlertMessage("Datas inválidas!");
-        }
-    };
 
 
     const handleConfigs = async () => {
@@ -217,7 +218,7 @@ export default function Faturas() {
                 await sendPost('/faturamento', body);
             }
             setAlertMessage("Faturas geradas com sucesso!");
-            await handleSearch();
+            await showFaturas();
         } else {
             setAlertMessage("Erro ao carregar os contratos!");
         }
@@ -227,7 +228,7 @@ export default function Faturas() {
         const body = { usuario: 'Guilherme' };
         const response = await sendDelete(`/faturamento/${id}`, body);
         if (response) {
-            await loadFaturas();
+            await showFaturas();
         } else {
             setAlertMessage("Erro ao deletar a fatura!");
             console.log(response);
@@ -271,8 +272,7 @@ export default function Faturas() {
         try {
             const response = await sendPut('/faturamento/' + selectedFatura.id + '/pagamento', body);
             if (response) {
-                await loadFaturas();
-                await handleSearch();
+                await showFaturas();
                 setIsPaymentDialogOpen(false)
             } else {
                 setAlertMessage("Erro ao processar a solicitação");
@@ -312,14 +312,14 @@ export default function Faturas() {
             printWindow.document.write('</style></head><body>');
             printWindow.document.write('<h2>Relatório de Faturas</h2>');
             printWindow.document.write('<table>');
-            printWindow.document.write('<tr><th>Cliente</th><th>Vencimento</th><th>Pagamento</th><th>Valor</th><th>Forma de Pagamento</th></tr>');
-            faturasFiltradas.forEach((fatura) => {
+            printWindow.document.write('<tr><th>Cliente</th><th style="text-aling: center;">Vencimento</th><th style="text-aling: center;">Pagamento</th><th style="text-aling: right;">Valor</th><th>Forma de Pagamento</th></tr>');
+            faturas.forEach((fatura) => {
                 printWindow.document.write(`
                     <tr>
                         <td>${fatura.clienteNome}</td>
-                        <td>${fatura.dataVencimento ? new Date(fatura.dataVencimento).toLocaleDateString('pt-BR') : ''}</td>
-                        <td>${fatura.dataPagamento ? new Date(fatura.dataPagamento).toLocaleDateString('pt-BR'  ) : 'Pendente'}</td>
-                        <td>${fatura.valorFinal}</td>
+                        <td style="text-aling: center;">${fatura.dataVencimento ? new Date(fatura.dataVencimento).toLocaleDateString('pt-BR') : ''}</td>
+                        <td style="text-aling: center;">${fatura.dataPagamento ? new Date(fatura.dataPagamento).toLocaleDateString('pt-BR') : 'Pendente'}</td>
+                        <td style="text-aling: right;">${fatura.valorFinal}</td>
                         <td>${fatura.formaPagamentoDescricao}</td>
                     </tr>
                 `);
@@ -339,6 +339,114 @@ export default function Faturas() {
         }
     };
 
+    // Gera Boleto da Fatura ////////////////////////////////////////////////////////////////////////////////////////
+    const handleBoletos = async (fatura: any) => {
+
+        const boleto = `
+            <html>
+                <head>
+                    <title>Boleto</title>
+                <head>
+                <style>
+                    html, body, div, span, applet, object, iframe,
+                    h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+                    a, abbr, acronym, address, big, cite, code,
+                    del, dfn, em, img, ins, kbd, q, s, samp,
+                    small, strike, strong, sub, sup, tt, var,
+                    b, u, i, center,
+                    dl, dt, dd, ol, ul, li,
+                    fieldset, form, label, legend,
+                    table, caption, tbody, tfoot, thead, tr, th, td,
+                    article, aside, canvas, details, embed, 
+                    figure, figcaption, footer, header, hgroup, 
+                    menu, nav, output, ruby, section, summary,
+                    time, mark, audio, video {
+                        margin: 0;
+                        padding: 0;
+                        border: 0;
+                        font-size: 100%;
+                        font: inherit;
+                        vertical-align: baseline;
+                    }
+                    /* HTML5 display-role reset for older browsers */
+                    article, aside, details, figcaption, figure, 
+                    footer, header, hgroup, menu, nav, section {
+                        display: block;
+                    }
+                    body {
+                        line-height: 1;
+                    }
+                    ol, ul {
+                        list-style: none;
+                    }
+                    blockquote, q {
+                        quotes: none;
+                    }
+                    blockquote:before, blockquote:after,
+                    q:before, q:after {
+                        content: '';
+                        content: none;
+                    }
+                    table {
+                        border-collapse: collapse;
+                        border-spacing: 0;
+                    }
+                </style>
+                <body>
+                    <div style="font-family: Arial, sans-serif; padding: 20px;">
+                        <div style='width: 100%; display: flex; justify-content: space-between; align-items: flex-end;'>
+                            <div id="logoContainer"></div> 
+                            <div style='display: flex; flex-direction: column; align-items: flex-end; gap: 5px;'>
+                                <h1 style="font-size: 20px; font-weight: bold;">Rádio Cultura Canguçu Ltda</h1>
+                                <p>Rua Professor André Puente, 203</p>
+                                <p>CEP: 96600-000 - Canguçu, Rio Grande do Sul, Brasil</p>
+                                <p>CNPJ: 25.043.065/0001-45</p>
+                                <p>Telefone: (53) 3252-1144 || (53) 9 9952-1144</p>
+                                <p>E-mail: culturaam1030@gmail.com</p>
+                            </div> 
+                        </div>
+                        <hr style="border: 1px solid black; width: 100%;" />
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                                <div>
+                                    <p>Cliente:</p>
+                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.clienteNome}</h1>
+                                </div>
+                                <div>
+                                    <p>Programa:</p>
+                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.programaNome}</h1>
+                                </div>
+                            </div>
+                            <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                            </div>
+                        </div>
+                    </div>
+                </body>
+            </html>
+        `
+
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        if (printWindow) {
+            printWindow.document.write(boleto);
+
+            const img = printWindow.document.createElement('img');
+            img.src = CulturaLogo;
+            img.style.width = '200px';
+            img.style.height = 'auto';
+            const logoContainer = printWindow.document.getElementById('logoContainer');
+            if (logoContainer) {
+                logoContainer.appendChild(img);
+            }
+
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        } else {
+            setAlertMessage("Erro ao gerar o relatório de impressão!");
+        }
+
+    }
 
     return (
         <div>
@@ -378,7 +486,7 @@ export default function Faturas() {
                                 </Select>
                                 <Input placeholder="Inicio" ref={dataInicioSearchRef} value={dataInicioSearch} onInput={(e: any) => setDataInicioSearch(e.target.value)} />
                                 <Input placeholder="Fim" ref={dataFimSearchRef} value={dataFimSearch} onInput={(e: any) => setDataFimSearch(e.target.value)} />
-                                <Button variant={"secondary"} onClick={handleSearch}><Search size={20} /></Button>
+                                <Button variant={"secondary"} onClick={showFaturas}><Search size={20} /></Button>
                             </div>
                         </div>
                         <div className="flex items-center justify-end gap-2">
@@ -402,7 +510,7 @@ export default function Faturas() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {faturasFiltradas.map((fatura) => (
+                                {faturas.map((fatura) => (
                                     <TableRow key={fatura.id}>
                                         <TableCell>{fatura.clienteNome}</TableCell>
                                         <TableCell>{fatura.programaNome}</TableCell>
@@ -415,6 +523,9 @@ export default function Faturas() {
                                                 <CircleCheckBig className="w-4 h-4 cursor-pointer" onClick={() => hendleOpenPayment(fatura)} />
                                             </TableCell>
                                         ) : <TableCell></TableCell>}
+                                        <TableCell>
+                                            <Printer className="w-4 h-4 cursor-pointer" onClick={() => handleBoletos(fatura)} />
+                                        </TableCell>
                                         <TableCell>
                                             <Trash className="w-4 h-4 cursor-pointer" onClick={() => {
                                                 setAlertConfirmMessage("Tem certeza que deseja excluir esta fatura?")
