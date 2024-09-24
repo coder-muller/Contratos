@@ -138,7 +138,6 @@ export default function Faturas() {
 
                 faturas = faturasCompletas
 
-
                 if (situacao === 'pendentes') {
                     faturas = faturasCompletas.filter(fatura => fatura.dataPagamento === null);
                 } else if (situacao === 'pagas') {
@@ -416,8 +415,32 @@ export default function Faturas() {
                                     <p>Programa:</p>
                                     <h1 style="font-size: 20px; font-weight: bold;">${fatura.programaNome}</h1>
                                 </div>
+                                <div>
+                                    <p>Cliente:</p>
+                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.clienteNome}</h1>
+                                </div>
+                                <div>
+                                    <p>Programa:</p>
+                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.programaNome}</h1>
+                                </div>
                             </div>
                             <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                                <div>
+                                    <p>Cliente:</p>
+                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.clienteNome}</h1>
+                                </div>
+                                <div>
+                                    <p>Programa:</p>
+                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.programaNome}</h1>
+                                </div>
+                                <div>
+                                    <p>Cliente:</p>
+                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.clienteNome}</h1>
+                                </div>
+                                <div>
+                                    <p>Programa:</p>
+                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.programaNome}</h1>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -440,8 +463,10 @@ export default function Faturas() {
 
             printWindow.document.close();
             printWindow.focus();
-            printWindow.print();
-            printWindow.close();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
         } else {
             setAlertMessage("Erro ao gerar o relatório de impressão!");
         }
