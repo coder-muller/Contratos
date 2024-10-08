@@ -339,7 +339,7 @@ export default function Faturas() {
     };
 
     // Gera Todos os Boletos ////////////////////////////////////////////////////////////////////////////////////////
-    const handleAllBoletos = async (fatura: any) => {
+    const handleAllBoletos = async () => {
 
         let boletoHtml = `
             <html>
@@ -592,25 +592,15 @@ export default function Faturas() {
         `;
 
         const printWindow = window.open('', '_blank', 'width=800,height=600');
-if (printWindow) {
-    printWindow.document.write(boletoHtml);
-    const img = printWindow.document.createElement('img');
-    img.src = CulturaLogo;
-    img.style.width = '200px';
-    img.style.height = 'auto';
-    const logoContainer = printWindow.document.getElementById('logoContainer');
-    if (logoContainer) {
-        logoContainer.appendChild(img);
-    }
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-    }, 500);
-} else {
-    setAlertMessage("Erro ao gerar o relatório de impressão!");
-}
+        if (printWindow) {
+            printWindow.document.write(boletoHtml);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        } else {
+            setAlertMessage("Erro ao gerar o relatório de impressão!");
+        }
 
     }
 
@@ -769,7 +759,7 @@ if (printWindow) {
                         </div>
 
                         <hr style="border: 3px dotted black; width: 100%; margin-top: 30px;" />
-                        
+
                         <div style='width: 100%; display: flex; justify-content: space-between; align-items: flex-end;'>
                             <div id="logoContainer"></div> 
                             <div style='display: flex; flex-direction: column; align-items: flex-end; gap: 5px;'>
@@ -925,7 +915,7 @@ if (printWindow) {
                         <div className="flex items-center justify-end gap-2">
                             <Button variant={"secondary"} onClick={handlePrintReport}>Imprimir Relatório</Button>
                             <Button onClick={handleConfigs}>Gerar Faturas</Button>
-                            <Button onClick={() => handleAllBoletos(faturas)}>Gerar Todos Boletos</Button>
+                            <Button onClick={handleAllBoletos}>Gerar Todos Boletos</Button>
                         </div>
                     </div>
                     <div className="border rounded-lg shadow-md w-11/12 m-auto max-h-[60vh] overflow-y-auto">
