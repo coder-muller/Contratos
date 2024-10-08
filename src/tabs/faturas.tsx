@@ -217,7 +217,7 @@ export default function Faturas() {
                 await sendPost('/faturamento', body);
             }
             setAlertMessage("Faturas geradas com sucesso!");
-            await showFaturas();
+            showFaturas();
         } else {
             setAlertMessage("Erro ao carregar os contratos!");
         }
@@ -227,7 +227,7 @@ export default function Faturas() {
         const body = { usuario: 'Guilherme' };
         const response = await sendDelete(`/faturamento/${id}`, body);
         if (response) {
-            await showFaturas();
+            showFaturas();
         } else {
             setAlertMessage("Erro ao deletar a fatura!");
             console.log(response);
@@ -338,8 +338,290 @@ export default function Faturas() {
         }
     };
 
+    // Gera Todos os Boletos ////////////////////////////////////////////////////////////////////////////////////////
+    const handleAllBoletos = async (fatura: any) => {
+
+        let boletoHtml = `
+            <html>
+                <head>
+                    <title>Boleto</title>
+                <head>
+                <style>
+                    html, body, div, span, applet, object, iframe,
+                    h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+                    a, abbr, acronym, address, big, cite, code,
+                    del, dfn, em, img, ins, kbd, q, s, samp,
+                    small, strike, strong, sub, sup, tt, var,
+                    b, u, i, center,
+                    dl, dt, dd, ol, ul, li,
+                    fieldset, form, label, legend,
+                    table, caption, tbody, tfoot, thead, tr, th, td,
+                    article, aside, canvas, details, embed, 
+                    figure, figcaption, footer, header, hgroup, 
+                    menu, nav, output, ruby, section, summary,
+                    time, mark, audio, video {
+                        margin: 0;
+                        padding: 0;
+                        border: 0;
+                        font-size: 100%;
+                        font: inherit;
+                        vertical-align: baseline;
+                    }
+                    /* HTML5 display-role reset for older browsers */
+                    article, aside, details, figcaption, figure, 
+                    footer, header, hgroup, menu, nav, section {
+                        display: block;
+                    }
+                    body {
+                        line-height: 1;
+                    }
+                    ol, ul {
+                        list-style: none;
+                    }
+                    blockquote, q {
+                        quotes: none;
+                    }
+                    blockquote:before, blockquote:after,
+                    q:before, q:after {
+                        content: '';
+                        content: none;
+                    }
+                    table {
+                        border-collapse: collapse;
+                        border-spacing: 0;
+                    }
+                    h1{
+                        font-size: 14px;
+                    }
+                    p{
+                        font-size: 12px;
+                    }
+                    .boleto {
+                        page-break-after: always; /* Garante que cada boleto esteja em uma nova página */
+                        margin-bottom: 20px;
+                    }
+                </style>
+                <body>
+        `
+
+        for (const fatura of faturas) {
+
+            const clientes = await sendGet('/clientes/04390988077');
+            const clienteInfo = clientes.find((cliente: any) => cliente.id === fatura.id_cliente);
+            const contratos = await sendGet('/contratos/04390988077');
+            const contratoInfo = contratos.find((contrato: any) => contrato.id === fatura.id_contrato);
+            const corretor = await getDataFromId(contratoInfo.id_corretor, '/corretores/04390988077', 'nome');
+
+            boletoHtml += `
+           <div style="font-family: Arial, sans-serif; padding: 20px;" class="boleto">
+                <div style='width: 100%; display: flex; justify-content: space-between; align-items: flex-end;'>
+                    <div id="logoContainer"></div> 
+                    <div style='display: flex; flex-direction: column; align-items: flex-end; gap: 5px;'>
+                        <h1 style="font-weight: bold;">Rádio Cultura Canguçu Ltda</h1>
+                        <p>Rua Professor André Puente, 203</p>
+                        <p>CEP: 96600-000 - Canguçu, Rio Grande do Sul, Brasil</p>
+                        <p>CNPJ: 25.043.065/0001-45</p>
+                        <p>Telefone: (53) 3252-1144 || (53) 9 9952-1144</p>
+                        <p>E-mail: culturaam1030@gmail.com</p>
+                    </div> 
+                </div>
+                <hr style="border: 1px solid black; width: 100%;" />
+                <div style="display: flex; justify-content: center; align-items: center;">
+                    <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                        <div>
+                            <p>Cliente:</p>
+                            <h1 style="font-weight: bold;">${fatura.clienteNome}</h1>
+                        </div>
+                        <div>
+                            <p>Endereço:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.endereco}</h1>
+                        </div>
+                        <div>
+                            <p>Município:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.cidade}</h1>
+                        </div>
+                        <div>
+                            <p>CNPJ:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.cnpj}</h1>
+                        </div>
+                    </div>
+                    <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                        <div>
+                            <p>Fone:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.fone}</h1>
+                        </div>
+                        <div>
+                            <p>CEP:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.cep}</h1>
+                        </div>
+                        <div>
+                            <p>Estado:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.estado}</h1>
+                        </div>
+                        <div>
+                            <p>Programa:</p>
+                            <h1 style="font-weight: bold;">${fatura.programaNome}</h1>
+                        </div>
+                    </div>
+                </div>
+                <hr style="border: 1px solid black; width: 100%;" />
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p>Data de Emissão:</p>
+                        <h1 style="font-weight: bold;">${convertIsoToDate(fatura.dataEmissao)}</h1>
+                    </div>
+                    <div>
+                        <p>Data de Vencimento:</p>
+                        <h1 style="font-weight: bold;">${convertIsoToDate(fatura.dataVencimento)}</h1>
+                    </div>
+                    <div>
+                        <p>Data de Pagamento:</p>
+                        <h1 style="font-weight: bold;">${fatura.dataPagamento ? convertIsoToDate(fatura.dataPagamento) : 'Pendente'}</h1>
+                    </div>
+                    <div>
+                        <p>Valor:</p>
+                        <h1 style="font-weight: bold;">${fatura.valorFinal}</h1>
+                    </div>
+                </div>
+                <hr style="border: 1px solid black; width: 100%;" />
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p>Corretor:</p>
+                        <h1 style="font-weight: bold;">${corretor}</h1>
+                    </div>
+                    <div>
+                        <p>Descrição:</p>
+                        <h1 style="font-weight: bold;">${contratoInfo.descritivo}</h1>
+                    </div>
+                </div>
+                <hr style="border: 1px solid black; width: 100%;" />
+                <p>Reconheço(emos) a exatidão desta Duplicata de Prestação de Serviço na importância acima que pagarei(emos) à Rádio Cultura Canguçu Ltda. no vencimento acima indicado.</p>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 200px; margin-top: 80px;">
+                    <p style="border-top: 1px solid gray; padding: 5px 40px;">Assinatura do Emitente</p>
+                    <p style="border-top: 1px solid gray; padding: 5px 40px;">Assinatura do Sacado</p>
+                </div>
+                <hr style="border: 3px dotted black; width: 100%; margin-top: 30px;" />
+                <div style='width: 100%; display: flex; justify-content: space-between; align-items: flex-end;'>
+                    <div id="logoContainer"></div> 
+                    <div style='display: flex; flex-direction: column; align-items: flex-end; gap: 5px;'>
+                        <h1 style="font-weight: bold;">Rádio Cultura Canguçu Ltda</h1>
+                        <p>Rua Professor André Puente, 203</p>
+                        <p>CEP: 96600-000 - Canguçu, Rio Grande do Sul, Brasil</p>
+                        <p>CNPJ: 25.043.065/0001-45</p>
+                        <p>Telefone: (53) 3252-1144 || (53) 9 9952-1144</p>
+                        <p>E-mail: culturaam1030@gmail.com</p>
+                    </div> 
+                </div>
+                <hr style="border: 1px solid black; width: 100%;" />
+                <div style="display: flex; justify-content: center; align-items: center;">
+                    <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                        <div>
+                            <p>Cliente:</p>
+                            <h1 style="font-weight: bold;">${fatura.clienteNome}</h1>
+                        </div>
+                        <div>
+                            <p>Endereço:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.endereco}</h1>
+                        </div>
+                        <div>
+                            <p>Município:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.cidade}</h1>
+                        </div>
+                        <div>
+                            <p>CNPJ:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.cnpj}</h1>
+                        </div>
+                    </div>
+                    <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                        <div>
+                            <p>Fone:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.fone}</h1>
+                        </div>
+                        <div>
+                            <p>CEP:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.cep}</h1>
+                        </div>
+                        <div>
+                            <p>Estado:</p>
+                            <h1 style="font-weight: bold;">${clienteInfo.estado}</h1>
+                        </div>
+                        <div>
+                            <p>Programa:</p>
+                            <h1 style="font-weight: bold;">${fatura.programaNome}</h1>
+                        </div>
+                    </div>
+                </div>
+                <hr style="border: 1px solid black; width: 100%;" />
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p>Data de Emissão:</p>
+                        <h1 style="font-weight: bold;">${convertIsoToDate(fatura.dataEmissao)}</h1>
+                    </div>
+                    <div>
+                        <p>Data de Vencimento:</p>
+                        <h1 style="font-weight: bold;">${convertIsoToDate(fatura.dataVencimento)}</h1>
+                    </div>
+                    <div>
+                        <p>Data de Pagamento:</p>
+                        <h1 style="font-weight: bold;">${fatura.dataPagamento ? convertIsoToDate(fatura.dataPagamento) : 'Pendente'}</h1>
+                    </div>
+                    <div>
+                        <p>Valor:</p>
+                        <h1 style="font-weight: bold;">${fatura.valorFinal}</h1>
+                    </div>
+                </div>
+                <hr style="border: 1px solid black; width: 100%;" />
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p>Corretor:</p>
+                        <h1 style="font-weight: bold;">${corretor}</h1>
+                    </div>
+                    <div>
+                        <p>Descrição:</p>
+                        <h1 style="font-weight: bold;">${contratoInfo.descritivo}</h1>
+                    </div>
+                </div>
+                <hr style="border: 1px solid black; width: 100%;" />
+            </div>
+           `
+        }
+
+        boletoHtml += `
+                </body>
+            </html>
+        `;
+
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+if (printWindow) {
+    printWindow.document.write(boletoHtml);
+    const img = printWindow.document.createElement('img');
+    img.src = CulturaLogo;
+    img.style.width = '200px';
+    img.style.height = 'auto';
+    const logoContainer = printWindow.document.getElementById('logoContainer');
+    if (logoContainer) {
+        logoContainer.appendChild(img);
+    }
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 500);
+} else {
+    setAlertMessage("Erro ao gerar o relatório de impressão!");
+}
+
+    }
+
     // Gera Boleto da Fatura ////////////////////////////////////////////////////////////////////////////////////////
     const handleBoletos = async (fatura: any) => {
+
+        const clientes = await sendGet('/clientes/04390988077');
+        const clienteInfo = clientes.find((cliente: any) => cliente.id === fatura.id_cliente);
+        const contratos = await sendGet('/contratos/04390988077');
+        const contratoInfo = contratos.find((contrato: any) => contrato.id === fatura.id_contrato);
+        const corretor = await getDataFromId(contratoInfo.id_corretor, '/corretores/04390988077', 'nome');
 
         const boleto = `
             <html>
@@ -390,13 +672,19 @@ export default function Faturas() {
                         border-collapse: collapse;
                         border-spacing: 0;
                     }
+                    h1{
+                        font-size: 14px;
+                    }
+                    p{
+                        font-size: 12px;
+                    }
                 </style>
                 <body>
                     <div style="font-family: Arial, sans-serif; padding: 20px;">
                         <div style='width: 100%; display: flex; justify-content: space-between; align-items: flex-end;'>
                             <div id="logoContainer"></div> 
                             <div style='display: flex; flex-direction: column; align-items: flex-end; gap: 5px;'>
-                                <h1 style="font-size: 20px; font-weight: bold;">Rádio Cultura Canguçu Ltda</h1>
+                                <h1 style="font-weight: bold;">Rádio Cultura Canguçu Ltda</h1>
                                 <p>Rua Professor André Puente, 203</p>
                                 <p>CEP: 96600-000 - Canguçu, Rio Grande do Sul, Brasil</p>
                                 <p>CNPJ: 25.043.065/0001-45</p>
@@ -409,40 +697,160 @@ export default function Faturas() {
                             <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
                                 <div>
                                     <p>Cliente:</p>
-                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.clienteNome}</h1>
+                                    <h1 style="font-weight: bold;">${fatura.clienteNome}</h1>
                                 </div>
                                 <div>
-                                    <p>Programa:</p>
-                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.programaNome}</h1>
+                                    <p>Endereço:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.endereco}</h1>
                                 </div>
                                 <div>
-                                    <p>Cliente:</p>
-                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.clienteNome}</h1>
+                                    <p>Município:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.cidade}</h1>
                                 </div>
                                 <div>
-                                    <p>Programa:</p>
-                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.programaNome}</h1>
+                                    <p>CNPJ:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.cnpj}</h1>
                                 </div>
                             </div>
                             <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
                                 <div>
-                                    <p>Cliente:</p>
-                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.clienteNome}</h1>
+                                    <p>Fone:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.fone}</h1>
+                                </div>
+                                <div>
+                                    <p>CEP:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.cep}</h1>
+                                </div>
+                                <div>
+                                    <p>Estado:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.estado}</h1>
                                 </div>
                                 <div>
                                     <p>Programa:</p>
-                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.programaNome}</h1>
-                                </div>
-                                <div>
-                                    <p>Cliente:</p>
-                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.clienteNome}</h1>
-                                </div>
-                                <div>
-                                    <p>Programa:</p>
-                                    <h1 style="font-size: 20px; font-weight: bold;">${fatura.programaNome}</h1>
+                                    <h1 style="font-weight: bold;">${fatura.programaNome}</h1>
                                 </div>
                             </div>
                         </div>
+                        <hr style="border: 1px solid black; width: 100%;" />
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p>Data de Emissão:</p>
+                                <h1 style="font-weight: bold;">${convertIsoToDate(fatura.dataEmissao)}</h1>
+                            </div>
+                            <div>
+                                <p>Data de Vencimento:</p>
+                                <h1 style="font-weight: bold;">${convertIsoToDate(fatura.dataVencimento)}</h1>
+                            </div>
+                            <div>
+                                <p>Data de Pagamento:</p>
+                                <h1 style="font-weight: bold;">${fatura.dataPagamento ? convertIsoToDate(fatura.dataPagamento) : 'Pendente'}</h1>
+                            </div>
+                            <div>
+                                <p>Valor:</p>
+                                <h1 style="font-weight: bold;">${fatura.valorFinal}</h1>
+                            </div>
+                        </div>
+                        <hr style="border: 1px solid black; width: 100%;" />
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p>Corretor:</p>
+                                <h1 style="font-weight: bold;">${corretor}</h1>
+                            </div>
+                            <div>
+                                <p>Descrição:</p>
+                                <h1 style="font-weight: bold;">${contratoInfo.descritivo}</h1>
+                            </div>
+                        </div>
+                        <hr style="border: 1px solid black; width: 100%;" />
+                        <p>Reconheço(emos) a exatidão desta Duplicata de Prestação de Serviço na importância acima que pagarei(emos) à Rádio Cultura Canguçu Ltda. no vencimento acima indicado.</p>
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 200px; margin-top: 80px;">
+                            <p style="border-top: 1px solid gray; padding: 5px 40px;">Assinatura do Emitente</p>
+                            <p style="border-top: 1px solid gray; padding: 5px 40px;">Assinatura do Sacado</p>
+                        </div>
+
+                        <hr style="border: 3px dotted black; width: 100%; margin-top: 30px;" />
+                        
+                        <div style='width: 100%; display: flex; justify-content: space-between; align-items: flex-end;'>
+                            <div id="logoContainer"></div> 
+                            <div style='display: flex; flex-direction: column; align-items: flex-end; gap: 5px;'>
+                                <h1 style="font-weight: bold;">Rádio Cultura Canguçu Ltda</h1>
+                                <p>Rua Professor André Puente, 203</p>
+                                <p>CEP: 96600-000 - Canguçu, Rio Grande do Sul, Brasil</p>
+                                <p>CNPJ: 25.043.065/0001-45</p>
+                                <p>Telefone: (53) 3252-1144 || (53) 9 9952-1144</p>
+                                <p>E-mail: culturaam1030@gmail.com</p>
+                            </div> 
+                        </div>
+                        <hr style="border: 1px solid black; width: 100%;" />
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                                <div>
+                                    <p>Cliente:</p>
+                                    <h1 style="font-weight: bold;">${fatura.clienteNome}</h1>
+                                </div>
+                                <div>
+                                    <p>Endereço:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.endereco}</h1>
+                                </div>
+                                <div>
+                                    <p>Município:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.cidade}</h1>
+                                </div>
+                                <div>
+                                    <p>CNPJ:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.cnpj}</h1>
+                                </div>
+                            </div>
+                            <div style="width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                                <div>
+                                    <p>Fone:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.fone}</h1>
+                                </div>
+                                <div>
+                                    <p>CEP:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.cep}</h1>
+                                </div>
+                                <div>
+                                    <p>Estado:</p>
+                                    <h1 style="font-weight: bold;">${clienteInfo.estado}</h1>
+                                </div>
+                                <div>
+                                    <p>Programa:</p>
+                                    <h1 style="font-weight: bold;">${fatura.programaNome}</h1>
+                                </div>
+                            </div>
+                        </div>
+                        <hr style="border: 1px solid black; width: 100%;" />
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p>Data de Emissão:</p>
+                                <h1 style="font-weight: bold;">${convertIsoToDate(fatura.dataEmissao)}</h1>
+                            </div>
+                            <div>
+                                <p>Data de Vencimento:</p>
+                                <h1 style="font-weight: bold;">${convertIsoToDate(fatura.dataVencimento)}</h1>
+                            </div>
+                            <div>
+                                <p>Data de Pagamento:</p>
+                                <h1 style="font-weight: bold;">${fatura.dataPagamento ? convertIsoToDate(fatura.dataPagamento) : 'Pendente'}</h1>
+                            </div>
+                            <div>
+                                <p>Valor:</p>
+                                <h1 style="font-weight: bold;">${fatura.valorFinal}</h1>
+                            </div>
+                        </div>
+                        <hr style="border: 1px solid black; width: 100%;" />
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p>Corretor:</p>
+                                <h1 style="font-weight: bold;">${corretor}</h1>
+                            </div>
+                            <div>
+                                <p>Descrição:</p>
+                                <h1 style="font-weight: bold;">${contratoInfo.descritivo}</h1>
+                            </div>
+                        </div>
+                        <hr style="border: 1px solid black; width: 100%;" />
                     </div>
                 </body>
             </html>
@@ -517,6 +925,7 @@ export default function Faturas() {
                         <div className="flex items-center justify-end gap-2">
                             <Button variant={"secondary"} onClick={handlePrintReport}>Imprimir Relatório</Button>
                             <Button onClick={handleConfigs}>Gerar Faturas</Button>
+                            <Button onClick={() => handleAllBoletos(faturas)}>Gerar Todos Boletos</Button>
                         </div>
                     </div>
                     <div className="border rounded-lg shadow-md w-11/12 m-auto max-h-[60vh] overflow-y-auto">

@@ -2,9 +2,8 @@ const BASE_URL = 'http://localhost:4567';
 
 interface DataItem {
     id: string;
-    [key: string]: any; // Isso permite outros campos dinâmicos
-  }
-  
+    [key: string]: any;
+}
 
 export async function sendGet(rota: string): Promise<any> {
     try {
@@ -14,7 +13,6 @@ export async function sendGet(rota: string): Promise<any> {
             },
             method: 'GET',
         });
-
         if (response.ok) {
             const data = await response.json();
             return data;
@@ -37,7 +35,6 @@ export async function sendPost(rota: string, body: any): Promise<any> {
             method: 'POST',
             body: JSON.stringify(body),
         });
-
         if (response.ok) {
             const data = await response.json();
             return data;
@@ -60,7 +57,6 @@ export async function sendPut(rota: string, body: any): Promise<any> {
             method: 'PUT',
             body: JSON.stringify(body),
         });
-
         if (response.ok) {
             const data = await response.json();
             return data;
@@ -83,7 +79,6 @@ export async function sendDelete(rota: string, body: any): Promise<any> {
             method: 'DELETE',
             body: JSON.stringify(body),
         });
-
         if (response.ok) {
             const data = await response.json();
             return data;
@@ -105,7 +100,7 @@ export function parseDate(dateStr: string): Date | null {
     const day = Number(dayStr);
     const month = Number(monthStr);
     const year = Number(yearStr);
-    const date = new Date(year, month - 1, day);                            
+    const date = new Date(year, month - 1, day);
     if (date.getFullYear() === year &&
         date.getMonth() === month - 1 &&
         date.getDate() === day) {
@@ -155,23 +150,21 @@ export function getNextMonthDate(day: number): Date {
 }
 
 export async function getDataFromId(id: string, route: string, fieldName: string): Promise<string> {
-    const response: DataItem[] = await sendGet(route); // Use o tipo DataItem[]
+    const response: DataItem[] = await sendGet(route);
     const data = response.find((item: DataItem) => item.id === id);
-    
     if (data && fieldName in data) {
         return String(data[fieldName]);
     }
-    return 'erro'; 
+    return 'erro';
 }
 
 export async function getIdFromData(data: any, fieldName: string, route: string): Promise<string> {
-    const response: DataItem[] = await sendGet(route); // Use o tipo DataItem[]
+    const response: DataItem[] = await sendGet(route);
     const id = response.find((item: DataItem) => item[fieldName] === data);
-    
     if (id) {
         return String(id.id);
-    }   
-    return 'erro'; 
+    }
+    return 'erro';
 }
 
 
