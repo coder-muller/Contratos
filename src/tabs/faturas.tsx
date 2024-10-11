@@ -600,7 +600,7 @@ export default function Faturas() {
             printWindow.close();
         } else {
             setAlertMessage("Erro ao gerar o relatório de impressão!");
-        }
+        }   
 
     }
 
@@ -915,7 +915,7 @@ export default function Faturas() {
                         <div className="flex items-center justify-end gap-2">
                             <Button variant={"secondary"} onClick={handlePrintReport}>Imprimir Relatório</Button>
                             <Button onClick={handleConfigs}>Gerar Faturas</Button>
-                            <Button onClick={handleAllBoletos}>Gerar Todos Boletos</Button>
+                            <Button onClick={handleAllBoletos}>Imprimir Faturas</Button>
                         </div>
                     </div>
                     <div className="border rounded-lg shadow-md w-11/12 m-auto max-h-[60vh] overflow-y-auto">
