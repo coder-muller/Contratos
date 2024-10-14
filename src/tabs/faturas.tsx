@@ -128,10 +128,14 @@ export default function Faturas() {
             if (dataInicio && dataFim && isValidDate(dataInicio) && isValidDate(dataFim)) {
                 const inicioDate = parseDate(dataInicio);
                 const fimDate = parseDate(dataFim);
+
                 if (!inicioDate || !fimDate) {
                     setAlertMessage("Datas inválidas!");
                     return;
                 }
+
+                inicioDate.setHours(0, 0, 0, 0);
+                fimDate.setHours(23, 59, 59, 999);
 
                 const tipoData = tipoDataSearch;
                 const situacao = situacaoFaturaSearch;
@@ -600,7 +604,7 @@ export default function Faturas() {
             printWindow.close();
         } else {
             setAlertMessage("Erro ao gerar o relatório de impressão!");
-        }   
+        }
 
     }
 
