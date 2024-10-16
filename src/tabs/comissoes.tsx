@@ -1,5 +1,5 @@
-import { sendGet, sendPost, sendPut, sendDelete, getIdFromData, getDataFromId } from '../functions';
-import { Trash, Pencil, Search, HandHelping } from 'lucide-react';
+import { sendGet, getIdFromData, isValidDate } from '../functions';
+import { Search } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '../components/ui/table';
@@ -87,6 +87,10 @@ export function Comissoes() {
     }, []);
 
     useEffect(() => {
+        handleSearch();
+    }, [corretor]);
+
+    useEffect(() => {
         const applyMasks = () => {
             if (dataInicioSearchRef.current) {
                 IMask(dataInicioSearchRef.current, {
@@ -113,6 +117,16 @@ export function Comissoes() {
     }
 
     const handleSearch = async () => {
+        
+        if (!dataFimSearch || !dataInicioSearch) {
+            setAlertMessage('Data inicial e data final devem ser preenchidas!');
+            return;
+        }
+        if (!isValidDate(dataFimSearch) && !isValidDate(dataInicioSearch)) {
+            setAlertMessage('Data inicial e data final devem ser válidas!');
+            return;
+        }
+
         try {
             let faturas: FaturaData[] = await sendGet('/faturamento/04390988077');
             if (!faturas) {
