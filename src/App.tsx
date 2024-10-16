@@ -5,6 +5,7 @@ import Contratos from './tabs/contratos';
 import Clientes from './tabs/clientes';
 import Ajustes from "./tabs/ajustes";
 import Faturas from "./tabs/faturas";
+import { Comissoes } from "./tabs/comissoes";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
               <TabsTrigger value="clientes">Clientes</TabsTrigger>
               <TabsTrigger value="contratos">Contratos</TabsTrigger>
               <TabsTrigger value="faturas">Faturas</TabsTrigger>
+              <TabsTrigger value="comissoes">Comissões</TabsTrigger>
               <TabsTrigger value="ajustes">Ajustes</TabsTrigger>
             </TabsList>
           </div>
@@ -27,6 +29,9 @@ export default function App() {
           </TabsContent>
           <TabsContent value="faturas" className="w-screen px-10 py-3">
             <Faturas />
+          </TabsContent>
+          <TabsContent value="comissoes" className="w-screen px-10 py-3">
+            <Comissoes/>
           </TabsContent>
           <TabsContent value="ajustes">
             <Ajustes />

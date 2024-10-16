@@ -190,7 +190,7 @@ export default function Contratos() {
             setCorretores(response);
         } else {
             setAlertMessage("Erro ao carregar os corretores!");
-        }
+        }   
     }
 
     const loadFormasPagamento = async () => {
