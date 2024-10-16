@@ -6,7 +6,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { useState, useEffect, useRef } from "react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from "../components/ui/select";
-import { sendGet, sendPost, getDataFromId, convertIsoToDate, sendDelete, parseDate, isValidDate, sendPut, getIdFromData } from "../functions";
+import { sendGet, getDataFromId, convertIsoToDate, sendDelete, parseDate, isValidDate, sendPut, getIdFromData } from "../functions";
 import { Search, Trash, CircleCheckBig, Printer } from 'lucide-react';
 import IMask from 'imask';
 import { CustomAlertDialog, CustomConfirmDialog } from "../components/alert";
@@ -179,52 +179,6 @@ export default function Faturas() {
 
     const handleConfigs = async () => {
         setIsDialogOpen(true);
-    };
-
-
-
-    const hendleGenerate = async (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        if (!ano || ano < new Date().getFullYear()) {
-            setAlertMessage("Ano inválido!");
-            return;
-        }
-        setIsDialogOpen(false);
-        const contratos = await sendGet('/contratos/04390988077');
-        if (contratos) {
-            const activeContratos = contratos.filter((contrato: any) => contrato.status === 'ativo');
-            if (activeContratos.length === 0) {
-                setAlertMessage("Não há contratos ativos para gerar faturas!");
-                return;
-            }
-            for (const contrato of activeContratos) {
-                const check = await sendGet('/faturamento/04390988077');
-                const dataVencimentoContrato = new Date(ano, (Number(mes) - 1), Number(contrato.diaVencimento));
-                let filter = check.filter((fatura: any) => fatura.id_contrato === contrato.id);
-                filter = filter.filter((fatura: any) => {
-                    const dataVencimentoFatura = new Date(fatura.dataVencimento);
-                    return dataVencimentoFatura.getTime() === dataVencimentoContrato.getTime();
-                });
-                if (filter.length > 0) {
-                    continue;
-                }
-                const body = {
-                    chave: '04390988077',
-                    id_cliente: contrato.id_cliente,
-                    id_contrato: contrato.id,
-                    id_programa: contrato.id_programa,
-                    dataEmissao: new Date(),
-                    dataVencimento: dataVencimentoContrato,
-                    valor: contrato.valor,
-                    id_formaPagamento: contrato.id_formaPagamento,
-                };
-                await sendPost('/faturamento', body);
-            }
-            setAlertMessage("Faturas geradas com sucesso!");
-            showFaturas();
-        } else {
-            setAlertMessage("Erro ao carregar os contratos!");
-        }
     };
 
     const handleDelete = async (id: string) => {
@@ -1007,7 +961,6 @@ export default function Faturas() {
                             <DialogClose asChild>
                                 <Button variant={"outline"}>Cancelar</Button>
                             </DialogClose>
-                            <Button type="button" onClick={hendleGenerate}>Gerar</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

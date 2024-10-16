@@ -117,7 +117,7 @@ export function Comissoes() {
     }
 
     const handleSearch = async () => {
-        
+
         if (!dataFimSearch || !dataInicioSearch) {
             setAlertMessage('Data inicial e data final devem ser preenchidas!');
             return;
@@ -180,10 +180,10 @@ export function Comissoes() {
                 th { background-color: #f2f2f2; }
             `);
             printWindow.document.write('</style></head><body>');
-            printWindow.document.write('<h1>Relatório de Faturas</h1>');
+            printWindow.document.write('<h1>Controle de Comissões</h1>');
             printWindow.document.write(`<h2>Corretor: ${corretor}</h2>`);
             printWindow.document.write('<table>');
-            printWindow.document.write('<tr><th>Nome Fantasia</th><th style="text-aling: center;">Vencimento</th><th style="text-aling: center;">Pagamento</th><th style="text-aling: right;">Valor</th><th>Comissão(%)</th><th style="text-aling: right;">Comissão(R$)</th></tr>');
+            printWindow.document.write('<tr><th>Nome Fantasia</th><th style="text-aling: center;">Vencimento</th><th style="text-aling: center;">Pagamento</th><th style="text-aling: right;">Valor</th><th>Comissão</th><th style="text-aling: right;">Comissão(R$)</th></tr>');
             faturasFiltradas.forEach((fatura) => {
                 printWindow.document.write(`
                     <tr>
@@ -191,7 +191,7 @@ export function Comissoes() {
                         <td style="text-aling: center;">${new Date(fatura.dataVencimento).toLocaleDateString('pt-BR')}</td >
                         <td style="text-aling: center;">${new Date(fatura.dataPagamento).toLocaleDateString('pt-BR')}</td>
                         <td style="text-aling: right;">${parseFloat(fatura.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td style="text-aling: right;">${fatura.comissao}</td>
+                        <td style="text-aling: right;">${parseFloat(fatura.comissao).toLocaleString('pt-BR', { style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>
                         <td>${fatura.comissaoCorretor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
         `);
@@ -199,11 +199,12 @@ export function Comissoes() {
             });
             printWindow.document.write(`<tr><td><strong>Total</strong></td><td></td><td></td><td><td></td><td><strong>${somaValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></td></tr> `);
             printWindow.document.write('</table>');
+            printWindow.document.write(`<p>Eu, <strong>${corretor}</strong>, recebi da Radio Cultura AM Ltda. a quantia de <strong>${somaValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>, referente a comissão das faruras acima quitadas no período de ${dataInicioSearch} a ${dataFimSearch}.</p>`);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
             printWindow.focus();
             printWindow.print();
-            printWindow.close();    
+            printWindow.close();
         } else {
             setAlertMessage("Erro ao gerar o relatório de impressão!");
         }

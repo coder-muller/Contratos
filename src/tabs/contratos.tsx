@@ -19,6 +19,7 @@ export default function Contratos() {
 
     const valorRef = useRef(null);
     const dataEmissaoRef = useRef(null);
+    const dataVencimentoRef = useRef(null);
     const diaVencimentoRef = useRef(null);
     const comissaoRef = useRef(null);
     const anoRef = useRef(null);
@@ -28,11 +29,12 @@ export default function Contratos() {
     const [corretores, setCorretores] = useState<any[]>([]);
     const [programas, setProgramas] = useState<any[]>([]);
     const [formasPagamento, setFormasPagamento] = useState<any[]>([]);
-    const [statusSearch, setStatusSearch] = useState<any>('todos');
+    const [statusSearch, setStatusSearch] = useState<any>('ativo');
 
     const [cliente, setCliente] = useState('');
     const [programa, setPrograma] = useState('');
     const [dataEmissao, setDataEmissao] = useState('');
+    const [dataVencimento, setDataVencimento] = useState('');
     const [numeroInsercoes, setNumeroInsercoes] = useState('');
     const [valor, setValor] = useState('');
     const [formaPagamento, setFormaPagamento] = useState('');
@@ -47,6 +49,8 @@ export default function Contratos() {
 
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
     const [alertConfirmMessage, setAlertConfirmMessage] = useState<string | null>(null);
+    const [alertDeleteFaturasFuturas, setAlertDeleteFaturasFuturas] = useState<string | null>(null);
+    const [faturasPendentes, setFaturasPendentes] = useState<any[]>([]);
 
     useEffect(() => {
         loadContratos();
@@ -93,6 +97,11 @@ export default function Contratos() {
                 }
                 if (dataEmissaoRef.current) {
                     IMask(dataEmissaoRef.current, {
+                        mask: '00/00/0000',
+                    });
+                }
+                if (dataVencimentoRef.current) {
+                    IMask(dataVencimentoRef.current, {
                         mask: '00/00/0000',
                     });
                 }
@@ -190,7 +199,7 @@ export default function Contratos() {
             setCorretores(response);
         } else {
             setAlertMessage("Erro ao carregar os corretores!");
-        }   
+        }
     }
 
     const loadFormasPagamento = async () => {
@@ -225,11 +234,12 @@ export default function Contratos() {
         setCliente('');
         setPrograma('');
         setDataEmissao('')
+        setDataVencimento('')
         setNumeroInsercoes('')
         setValor('')
         setFormaPagamento('')
         setComissao('')
-        setStatus('')
+        setStatus('ativo')
         setCorretor('')
         setDescritivo('')
         setDiaVencimento('')
@@ -248,6 +258,7 @@ export default function Contratos() {
         setFormaPagamento(formaPagamento);
         setCorretor(corretor);
         setDataEmissao(convertIsoToDate(contrato.dataEmissao));
+        setDataVencimento(convertIsoToDate(contrato.dataVencimento));
         setNumeroInsercoes(contrato.numInsercoes);
         setValor(floatParaInput(contrato.valor));
         setComissao(contrato.comissao);
@@ -257,6 +268,44 @@ export default function Contratos() {
         setIsDialogOpen(true);
     }
 
+    const gerarFaturasEntreDatas = async (
+        dataInicio: Date,
+        dataFim: Date,
+        diaVencimento: number,
+        selectedContrato: any
+    ) => {
+        const dataAtual = new Date(dataInicio);
+        const faturas = [];
+
+        while (dataAtual <= dataFim) {
+            const ano = dataAtual.getFullYear();
+            const mes = dataAtual.getMonth();
+
+            const dataVencimento = new Date(ano, mes, diaVencimento);
+
+            if (dataVencimento >= dataInicio && dataVencimento <= dataFim) {
+                const body = {
+                    chave: '04390988077',
+                    id_cliente: selectedContrato.id_cliente,
+                    id_contrato: selectedContrato.id,
+                    id_programa: selectedContrato.id_programa,
+                    dataEmissao: new Date(),
+                    dataVencimento: dataVencimento,
+                    valor: selectedContrato.valor,
+                    id_formaPagamento: selectedContrato.id_formaPagamento,
+                };
+
+                await sendPost('/faturamento', body);
+                faturas.push(body);
+            }
+            dataAtual.setMonth(dataAtual.getMonth() + 1);
+        }
+
+        setAlertMessage(`${faturas.length} faturas geradas com sucesso!`);
+        return faturas;
+    };
+
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -265,6 +314,12 @@ export default function Contratos() {
             if (dataEmissao) {
                 if (!isValidDate(dataEmissao)) {
                     setAlertMessage("A data de emissão não é valida");
+                    return;
+                }
+            }
+            if (dataVencimento) {
+                if (!isValidDate(dataVencimento)) {
+                    setAlertMessage("A data de vencimento não é valida");
                     return;
                 }
             }
@@ -282,6 +337,7 @@ export default function Contratos() {
                 id_cliente: await getIdFromData(cliente, 'nomeFantasia', '/clientes/04390988077'),
                 id_programa: await getIdFromData(programa, 'programa', '/programacao/04390988077'),
                 dataEmissao: dataEmissao ? parseDate(dataEmissao) : '',
+                dataVencimento: dataVencimento ? parseDate(dataVencimento) : '',
                 numInsercoes: numeroInsercoes,
                 valor: converterParaNumero(valor),
                 id_formaPagamento: await getIdFromData(formaPagamento, 'formaPagamento', '/formaPagamento/04390988077'),
@@ -293,15 +349,27 @@ export default function Contratos() {
             };
             console.log(body);
             try {
+                let createdContrato;
                 if (selectedContrato) {
                     await sendPut(`/contratos/${selectedContrato.id}`, body);
                     setSelectedContrato(null);
                 } else {
-                    await sendPost('/contratos', body);
+                    createdContrato = await sendPost('/contratos', body);
+                }
+
+                if (createdContrato) {
+                    const contrato = createdContrato;
+                    await gerarFaturasEntreDatas(
+                        new Date(contrato.dataEmissao),
+                        new Date(contrato.dataVencimento),
+                        parseInt(diaVencimento),
+                        contrato
+                    );
                 }
                 loadContratos();
                 setIsDialogOpen(false);
                 resetForm();
+                setAlertMessage("Contrato e faturas gerados com sucesso!");
             }
             catch (error) {
                 setAlertMessage("Erro ao processar a solicitação");
@@ -321,7 +389,7 @@ export default function Contratos() {
         const dataVencimentoContrato = new Date(ano, (Number(mes) - 1), Number(selectedContrato.diaVencimento));
         const body = {
             chave: '04390988077',
-            id_cliente: selectedContrato.id_cliente,    
+            id_cliente: selectedContrato.id_cliente,
             id_contrato: selectedContrato.id,
             id_programa: selectedContrato.id_programa,
             dataEmissao: new Date(),
@@ -333,6 +401,45 @@ export default function Contratos() {
         setAlertMessage("Fatura gerada com sucesso!");
     }
 
+    const cancelarContrato = async (contratoId: number) => {
+        try {
+            const faturas = await sendGet(`/faturamento/04390988077/${contratoId}`);
+            const faturasPendentesFiltradas = faturas.filter((fatura: any) =>
+                !fatura.dataPagamento && new Date(fatura.dataVencimento) > new Date()
+            );
+            if (faturasPendentesFiltradas.length > 0) {
+                setFaturasPendentes(faturasPendentesFiltradas);
+                setAlertDeleteFaturasFuturas(`Este contrato tem ${faturasPendentesFiltradas.length} fatura(s) pendente(s). Deseja apagá-las?`);
+            } else {
+                await sendPut(`/contratos/cancelar/${contratoId}`, {});
+                setAlertMessage("Contrato cancelado com sucesso!");
+                loadContratos();
+            }
+        } catch (error) {
+            setAlertMessage("Erro ao cancelar o contrato");
+            console.log(error);
+        }
+    };
+
+    const handleDeleteFaturasFuturas = async () => {
+        try {
+            await Promise.all(faturasPendentes.map(async (fatura: any) => {
+                await sendDelete(`/faturamento/${fatura.id}`, {});
+            }));
+            setAlertMessage("Faturas pendentes apagadas com sucesso!");
+            setAlertDeleteFaturasFuturas(null);
+            await sendPut(`/contratos/cancelar/${selectedContrato.id}`, {});
+            setAlertMessage("Contrato cancelado com sucesso!");
+            loadContratos();
+            setIsDialogOpen(false)
+        } catch (error) {
+            setAlertMessage("Erro ao apagar faturas pendentes");
+            console.log(error);
+        }
+    };
+    const handleCancelDeleteFaturasFuturas = () => {
+        setAlertDeleteFaturasFuturas(null);
+    };
 
     return (
         <Card>
@@ -352,6 +459,7 @@ export default function Contratos() {
                                     <SelectItem value="todos" >Todos</SelectItem>
                                     <SelectItem value="ativo" >Ativo</SelectItem>
                                     <SelectItem value="inativo">Inativo</SelectItem>
+                                    <SelectItem value="Cancelado">Cancelado</SelectItem>
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
@@ -391,10 +499,14 @@ export default function Contratos() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-3 gap-2">
                                     <div>
                                         <Label>Data de Emissão</Label>
                                         <Input placeholder='Data de Emissão' type='text' value={dataEmissao} ref={dataEmissaoRef} onChange={(e: any) => setDataEmissao(e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <Label>Data de Vencimento</Label>
+                                        <Input placeholder='Data de Vencimento' type='text' value={dataVencimento} ref={dataVencimentoRef} onChange={(e: any) => setDataVencimento(e.target.value)} />
                                     </div>
                                     <div>
                                         <Label>Número de Inserções</Label>
@@ -407,8 +519,8 @@ export default function Contratos() {
                                         <Input placeholder='Valor' type='text' value={valor} ref={valorRef} onChange={(e: any) => setValor(e.target.value)} />
                                     </div>
                                     <div>
-                                        <Label>Dia do Vencimento</Label>
-                                        <Input placeholder='Vencimento' type='number' ref={diaVencimentoRef} value={diaVencimento} onChange={(e: any) => setDiaVencimento(e.target.value)} />
+                                        <Label>Dia do Pagamento</Label>
+                                        <Input placeholder='Pagamento' type='number' ref={diaVencimentoRef} value={diaVencimento} onChange={(e: any) => setDiaVencimento(e.target.value)} />
                                     </div>
                                     <div>
                                         <Label>Forma de Pagamento</Label>
@@ -467,6 +579,7 @@ export default function Contratos() {
                                 </div>
                             </form>
                             <DialogFooter className="mt-2">
+                                {selectedContrato && <Button variant={"outline"} onClick={() => cancelarContrato(selectedContrato.id)}>Cancelar Contrato</Button>}
                                 <DialogClose asChild>
                                     <Button variant={"outline"}>Cancelar</Button>
                                 </DialogClose>
@@ -555,13 +668,20 @@ export default function Contratos() {
                                     <DialogClose asChild>
                                         <Button variant={"outline"}>Cancelar</Button>
                                     </DialogClose>
-                                    <Button type="button" onClick={ gerarFaturaIndividual }>Gerar Fatura</Button>
+                                    <Button type="button" onClick={gerarFaturaIndividual}>Gerar Fatura</Button>
                                 </DialogFooter>
                             </form>
                         </DialogContent>
                     </Dialog>
                     {alertMessage && <CustomAlertDialog message={alertMessage} onClose={() => setAlertMessage(null)} />}
                     {alertConfirmMessage && <CustomConfirmDialog message={alertConfirmMessage} onConfirm={() => handleDelete(selectedContrato.id)} onCancel={() => setAlertConfirmMessage(null)} />}
+                    {alertDeleteFaturasFuturas && (
+                        <CustomConfirmDialog
+                            message={alertDeleteFaturasFuturas}
+                            onConfirm={handleDeleteFaturasFuturas}
+                            onCancel={handleCancelDeleteFaturasFuturas}
+                        />
+                    )}
                 </div>
             </CardContent>
         </Card>
