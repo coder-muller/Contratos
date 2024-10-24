@@ -6,11 +6,15 @@ import Clientes from './tabs/clientes';
 import Ajustes from "./tabs/ajustes";
 import Faturas from "./tabs/faturas";
 import { Comissoes } from "./tabs/comissoes";
+import { ModeToggle } from "./components/mode-toggle";
 
 export default function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="w-screen h-screen p-6 flex justify-center">
+        <div className="fixed top-4 right-4">
+          <ModeToggle />
+        </div>
         <Tabs defaultValue="clientes">
           <div className="flex items-center justify-center">
             <TabsList>
@@ -31,7 +35,7 @@ export default function App() {
             <Faturas />
           </TabsContent>
           <TabsContent value="comissoes" className="w-screen px-10 py-3">
-            <Comissoes/>
+            <Comissoes />
           </TabsContent>
           <TabsContent value="ajustes">
             <Ajustes />

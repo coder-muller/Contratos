@@ -977,7 +977,7 @@ export default function Faturas() {
                                 <Input placeholder="Data de pagamento" type="text" ref={dataPagamentoRef} value={dataPagamento} onChange={(e: any) => setDataPagamento(e.target.value)} />
                             </div>
                             <div>
-                                <Label>Mes</Label>
+                                <Label>Forma de Pagamento</Label>
                                 <Select onValueChange={(value) => setMetodoPagamento(value)} value={metodoPagamento}>
                                     <SelectTrigger>
                                         <SelectValue placeholder='Forma de Pagamento'></SelectValue>
