@@ -1,4 +1,4 @@
-const BASE_URL = 'http://192.168.8.5:4567';
+const BASE_URL = 'http://192.168.8.1:4567';
 
 interface DataItem {
     id: string;
